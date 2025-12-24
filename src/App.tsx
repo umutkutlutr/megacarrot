@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { LandingPage } from "./components/LandingPage";
-import { EntryPayment } from "./components/EntryPayment";
+import { ProtocolInitializationModal } from "./components/ProtocolInitializationModal";
 import { DashboardNav } from "./components/DashboardNav";
 import { SystemStatus } from "./components/SystemStatus";
 import { SingleFarmCard } from "./components/SingleFarmCard";
@@ -11,6 +11,7 @@ import { PixelVault } from "./components/PixelVault";
 
 export default function App() {
   const [gameState, setGameState] = useState<"landing" | "payment" | "dashboard">("landing");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   
   // Game data
   const [farmTier, setFarmTier] = useState(1);
@@ -34,15 +35,16 @@ export default function App() {
   const upgradeCost = farmTier * 5000;
 
   const handleConnect = () => {
-    setGameState("payment");
+    setShowPaymentModal(true);
   };
 
   const handlePaymentComplete = () => {
+    setShowPaymentModal(false);
     setGameState("dashboard");
   };
 
   const handlePaymentCancel = () => {
-    setGameState("landing");
+    setShowPaymentModal(false);
   };
 
   const handleDisconnect = () => {
@@ -118,8 +120,8 @@ export default function App() {
         </motion.div>
       )}
 
-      {gameState === "payment" && (
-        <EntryPayment
+      {showPaymentModal && (
+        <ProtocolInitializationModal
           onPaymentComplete={handlePaymentComplete}
           onCancel={handlePaymentCancel}
         />

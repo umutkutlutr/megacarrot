@@ -47,7 +47,6 @@
     --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --spacing: .25rem;
-    --container-2xl: 42rem;
     --container-6xl: 72rem;
     --text-xs: .75rem;
     --text-xs--line-height: calc(1 / .75);
@@ -340,14 +339,6 @@
     position: relative;
   }
 
-  .-inset-2 {
-    inset: calc(var(--spacing) * -2);
-  }
-
-  .-inset-4 {
-    inset: calc(var(--spacing) * -4);
-  }
-
   .inset-0 {
     inset: calc(var(--spacing) * 0);
   }
@@ -436,6 +427,14 @@
     z-index: 50;
   }
 
+  .z-\[100\] {
+    z-index: 100;
+  }
+
+  .z-\[101\] {
+    z-index: 101;
+  }
+
   .col-span-2 {
     grid-column: span 2 / span 2;
   }
@@ -486,20 +485,12 @@
     margin-inline: calc(var(--spacing) * 3);
   }
 
-  .mx-8 {
-    margin-inline: calc(var(--spacing) * 8);
-  }
-
   .mx-auto {
     margin-inline: auto;
   }
 
   .mt-1 {
     margin-top: calc(var(--spacing) * 1);
-  }
-
-  .mt-3 {
-    margin-top: calc(var(--spacing) * 3);
   }
 
   .mt-4 {
@@ -560,6 +551,10 @@
 
   .grid {
     display: grid;
+  }
+
+  .inline-block {
+    display: inline-block;
   }
 
   .h-0\.5 {
@@ -670,10 +665,6 @@
     width: calc(var(--spacing) * 16);
   }
 
-  .w-20 {
-    width: calc(var(--spacing) * 20);
-  }
-
   .w-32 {
     width: calc(var(--spacing) * 32);
   }
@@ -694,12 +685,12 @@
     width: 1px;
   }
 
-  .max-w-2xl {
-    max-width: var(--container-2xl);
-  }
-
   .max-w-6xl {
     max-width: var(--container-6xl);
+  }
+
+  .max-w-\[640px\] {
+    max-width: 640px;
   }
 
   .max-w-\[1200px\] {
@@ -753,10 +744,6 @@
 
   .items-end {
     align-items: flex-end;
-  }
-
-  .items-start {
-    align-items: flex-start;
   }
 
   .justify-between {
@@ -817,6 +804,12 @@
     --tw-space-y-reverse: 0;
     margin-block-start: calc(calc(var(--spacing) * 3) * var(--tw-space-y-reverse));
     margin-block-end: calc(calc(var(--spacing) * 3) * calc(1 - var(--tw-space-y-reverse)));
+  }
+
+  :where(.space-y-4 > :not(:last-child)) {
+    --tw-space-y-reverse: 0;
+    margin-block-start: calc(calc(var(--spacing) * 4) * var(--tw-space-y-reverse));
+    margin-block-end: calc(calc(var(--spacing) * 4) * calc(1 - var(--tw-space-y-reverse)));
   }
 
   .overflow-hidden {
@@ -944,6 +937,10 @@
     background-color: #333;
   }
 
+  .bg-\[\#444444\] {
+    background-color: #444;
+  }
+
   .bg-\[\#ff6a00\] {
     background-color: #ff6a00;
   }
@@ -996,6 +993,10 @@
     padding-inline: calc(var(--spacing) * 8);
   }
 
+  .px-10 {
+    padding-inline: calc(var(--spacing) * 10);
+  }
+
   .px-12 {
     padding-inline: calc(var(--spacing) * 12);
   }
@@ -1018,10 +1019,6 @@
 
   .py-16 {
     padding-block: calc(var(--spacing) * 16);
-  }
-
-  .pt-6 {
-    padding-top: calc(var(--spacing) * 6);
   }
 
   .pt-20 {

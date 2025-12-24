@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { useState, useEffect } from "react";
-import { Sprout, FileText, Zap, Box, Flame, Lock } from "lucide-react";
+import { Sprout, Zap, Box, Flame, Lock } from "lucide-react";
 import { PixelButton } from "./PixelButton";
 
 interface LandingPageProps {
@@ -9,31 +9,15 @@ interface LandingPageProps {
 
 export function LandingPage({ onConnect }: LandingPageProps) {
   const [scanlineY, setScanlineY] = useState(0);
-  const [rotation, setRotation] = useState(0);
-  const [outerRotation, setOuterRotation] = useState(0);
   const [glowPulse, setGlowPulse] = useState(0);
+  const [carrotScale, setCarrotScale] = useState(1);
+  const [shakeIntensity, setShakeIntensity] = useState(0);
 
   // Scanline animation
   useEffect(() => {
     const interval = setInterval(() => {
       setScanlineY((prev) => (prev >= 100 ? 0 : prev + 0.5));
     }, 30);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Emblem rotation (inner - faster)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRotation((prev) => (prev + 0.8) % 360);
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Outer rotation (slower, opposite direction)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setOuterRotation((prev) => (prev - 0.4) % 360);
-    }, 50);
     return () => clearInterval(interval);
   }, []);
 
@@ -45,7 +29,32 @@ export function LandingPage({ onConnect }: LandingPageProps) {
     return () => clearInterval(interval);
   }, []);
 
+  // Carrot growth animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCarrotScale((prev) => {
+        const newScale = prev + 0.002;
+        return newScale > 1.3 ? 1 : newScale;
+      });
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Shake decay
+  useEffect(() => {
+    if (shakeIntensity > 0) {
+      const timeout = setTimeout(() => {
+        setShakeIntensity((prev) => Math.max(0, prev - 0.5));
+      }, 100);
+      return () => clearTimeout(timeout);
+    }
+  }, [shakeIntensity]);
+
   const glowOpacity = Math.sin((glowPulse / 100) * Math.PI * 2) * 0.25 + 0.4;
+
+  const handleCarrotClick = () => {
+    setShakeIntensity(20);
+  };
 
   return (
     <div
@@ -177,21 +186,40 @@ export function LandingPage({ onConnect }: LandingPageProps) {
             ))}
           </div>
 
-          {/* Right: Docs & X - MUCH LARGER & MORE LEFT */}
-          <div className="flex items-center gap-10 pr-40">
+          {/* Right: ABOUT + DOCS + X - PIXEL FONT */}
+          <div className="flex items-center gap-8 pr-8">
             <motion.a
               href="#"
-              className="mono relative group"
-              style={{ color: "#666666", letterSpacing: "0.12em", fontSize: "30px", fontWeight: 500 }}
+              className="pixel relative group"
+              style={{ color: "#666666", letterSpacing: "0.08em", fontSize: "16px" }}
+              whileHover={{
+                color: "#2ed573",
+                y: -2,
+              }}
+              transition={{ duration: 0.16 }}
+            >
+              ABOUT
+              <motion.div
+                className="absolute -bottom-1 left-0 h-0.5 bg-[#2ed573]"
+                initial={{ width: 0 }}
+                whileHover={{ width: "100%" }}
+                transition={{ duration: 0.2 }}
+              />
+            </motion.a>
+
+            <motion.a
+              href="#"
+              className="pixel relative group"
+              style={{ color: "#666666", letterSpacing: "0.08em", fontSize: "16px" }}
               whileHover={{
                 color: "#ff6a00",
-                y: -3,
+                y: -2,
               }}
               transition={{ duration: 0.16 }}
             >
               DOCS
               <motion.div
-                className="absolute bottom-0 left-0 h-0.5 bg-[#ff6a00]"
+                className="absolute -bottom-1 left-0 h-0.5 bg-[#ff6a00]"
                 initial={{ width: 0 }}
                 whileHover={{ width: "100%" }}
                 transition={{ duration: 0.2 }}
@@ -200,17 +228,17 @@ export function LandingPage({ onConnect }: LandingPageProps) {
             
             <motion.a
               href="#"
-              className="mono relative group"
-              style={{ color: "#666666", letterSpacing: "0.12em", fontSize: "30px", fontWeight: 500 }}
+              className="pixel relative group"
+              style={{ color: "#666666", letterSpacing: "0.08em", fontSize: "16px" }}
               whileHover={{
                 color: "#00a8cc",
-                y: -3,
+                y: -2,
               }}
               transition={{ duration: 0.16 }}
             >
-              𝕏
+              X
               <motion.div
-                className="absolute bottom-0 left-0 h-0.5 bg-[#00a8cc]"
+                className="absolute -bottom-1 left-0 h-0.5 bg-[#00a8cc]"
                 initial={{ width: 0 }}
                 whileHover={{ width: "100%" }}
                 transition={{ duration: 0.2 }}
@@ -451,18 +479,19 @@ export function LandingPage({ onConnect }: LandingPageProps) {
             </div>
           </motion.div>
 
-          {/* Center animated emblem - LARGER & MORE PREMIUM */}
+          {/* Center GROWING PIXEL CARROT - CLICKABLE */}
           <motion.div
-            className="relative mb-16"
+            className="relative mb-16 cursor-pointer"
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            onClick={handleCarrotClick}
           >
             {/* Stepped glow halo (no blur, layered opacity) */}
             {[40, 32, 24, 16, 8].map((offset, i) => (
               <motion.div
                 key={i}
-                className="absolute"
+                className="absolute pointer-events-none"
                 style={{
                   inset: -offset,
                   backgroundColor: "#ff6a00",
@@ -471,82 +500,133 @@ export function LandingPage({ onConnect }: LandingPageProps) {
               />
             ))}
 
-            {/* Emblem container - LARGER */}
+            {/* Carrot container frame */}
             <div
-              className="relative w-64 h-64 border-3 border-[#ff6a00] flex items-center justify-center"
+              className="relative w-64 h-64 border-3 border-[#ff6a00] flex items-center justify-center overflow-visible"
               style={{ 
                 backgroundColor: "#0a0a0a",
                 boxShadow: "6px 6px 0 rgba(255, 106, 0, 0.4), inset 0 0 40px rgba(255, 106, 0, 0.08)",
               }}
             >
-              {/* Outer rotation ring (slower, opposite) */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <motion.div
-                  className="w-56 h-56 relative"
-                  style={{ transform: `rotate(${outerRotation}deg)` }}
-                >
-                  <svg width="224" height="224" viewBox="0 0 224 224">
-                    {/* Outer square frame with corners */}
-                    <rect x="16" y="16" width="192" height="192" fill="none" stroke="#ff6a00" strokeWidth="2" opacity="0.3" />
-                    <rect x="12" y="12" width="8" height="8" fill="#ff6a00" opacity="0.5" />
-                    <rect x="204" y="12" width="8" height="8" fill="#ff6a00" opacity="0.5" />
-                    <rect x="12" y="204" width="8" height="8" fill="#ff6a00" opacity="0.5" />
-                    <rect x="204" y="204" width="8" height="8" fill="#ff6a00" opacity="0.5" />
-                    
-                    {/* Diagonal cross lines */}
-                    <line x1="16" y1="16" x2="48" y2="48" stroke="#ff6a00" strokeWidth="2" opacity="0.2" />
-                    <line x1="208" y1="16" x2="176" y2="48" stroke="#ff6a00" strokeWidth="2" opacity="0.2" />
-                    <line x1="16" y1="208" x2="48" y2="176" stroke="#ff6a00" strokeWidth="2" opacity="0.2" />
-                    <line x1="208" y1="208" x2="176" y2="176" stroke="#ff6a00" strokeWidth="2" opacity="0.2" />
-                  </svg>
-                </motion.div>
+              {/* Pixel dirt/soil at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-20 flex flex-col justify-end overflow-hidden">
+                {[0, 1, 2].map((row) => (
+                  <div key={row} className="flex w-full">
+                    {[...Array(32)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="w-2 h-2"
+                        style={{
+                          backgroundColor: i % 3 === 0 ? "#3d2817" : i % 3 === 1 ? "#4a3320" : "#2a1a0f",
+                        }}
+                        animate={{
+                          opacity: [0.7, 0.9, 0.7],
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          delay: (i + row) * 0.1,
+                        }}
+                      />
+                    ))}
+                  </div>
+                ))}
               </div>
 
-              {/* Inner rotating wireframe core */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <motion.div
-                  className="w-40 h-40 relative"
-                  style={{ transform: `rotate(${rotation}deg)` }}
-                >
-                  {/* Enhanced hex wireframe */}
-                  <svg width="160" height="160" viewBox="0 0 160 160">
-                    {/* Outer hex */}
-                    <polygon
-                      points="80,16 128,48 128,112 80,144 32,112 32,48"
-                      fill="none"
-                      stroke="#ff6a00"
-                      strokeWidth="2.5"
-                      opacity="0.7"
-                    />
-                    {/* Middle hex */}
-                    <polygon
-                      points="80,36 108,52 108,108 80,124 52,108 52,52"
-                      fill="none"
-                      stroke="#ff6a00"
-                      strokeWidth="2.5"
-                      opacity="0.85"
-                    />
-                    {/* Center hex - filled */}
-                    <polygon
-                      points="80,60 96,70 96,90 80,100 64,90 64,70"
-                      fill="#ff6a00"
-                      stroke="#ff6a00"
-                      strokeWidth="2.5"
-                      opacity="0.95"
-                    />
-                    {/* Connecting lines */}
-                    <line x1="80" y1="16" x2="80" y2="60" stroke="#ff6a00" strokeWidth="2" opacity="0.4" />
-                    <line x1="128" y1="48" x2="96" y2="70" stroke="#ff6a00" strokeWidth="2" opacity="0.4" />
-                    <line x1="128" y1="112" x2="96" y2="90" stroke="#ff6a00" strokeWidth="2" opacity="0.4" />
-                    <line x1="80" y1="144" x2="80" y2="100" stroke="#ff6a00" strokeWidth="2" opacity="0.4" />
-                    <line x1="32" y1="112" x2="64" y2="90" stroke="#ff6a00" strokeWidth="2" opacity="0.4" />
-                    <line x1="32" y1="48" x2="64" y2="70" stroke="#ff6a00" strokeWidth="2" opacity="0.4" />
+              {/* Growing Pixel Carrot */}
+              <motion.div
+                className="absolute flex items-end justify-center"
+                style={{
+                  bottom: "64px",
+                }}
+                animate={{
+                  scale: carrotScale,
+                  rotate: shakeIntensity > 0 ? [0, -shakeIntensity, shakeIntensity, -shakeIntensity * 0.5, shakeIntensity * 0.5, 0] : 0,
+                }}
+                transition={{
+                  scale: { duration: 0.05 },
+                  rotate: { duration: 0.6, ease: "easeOut" },
+                }}
+              >
+                <svg width="120" height="160" viewBox="0 0 120 160" style={{ filter: "drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.3))" }}>
+                  {/* Carrot leaves (green) */}
+                  <g>
+                    {/* Left leaf cluster */}
+                    <rect x="24" y="0" width="8" height="8" fill="#2ed573" />
+                    <rect x="16" y="8" width="8" height="8" fill="#2ed573" />
+                    <rect x="24" y="8" width="8" height="8" fill="#26b361" />
+                    <rect x="8" y="16" width="8" height="8" fill="#2ed573" />
+                    <rect x="16" y="16" width="8" height="8" fill="#26b361" />
+                    <rect x="24" y="16" width="8" height="8" fill="#1f9a51" />
+                    <rect x="16" y="24" width="8" height="8" fill="#26b361" />
+                    <rect x="24" y="24" width="8" height="8" fill="#1f9a51" />
                     
-                    {/* Inner core details */}
-                    <circle cx="80" cy="80" r="6" fill="#0a0a0a" stroke="#ff6a00" strokeWidth="2" />
-                  </svg>
-                </motion.div>
-              </div>
+                    {/* Center leaf */}
+                    <rect x="48" y="0" width="8" height="8" fill="#2ed573" />
+                    <rect x="48" y="8" width="8" height="8" fill="#26b361" />
+                    <rect x="40" y="16" width="8" height="8" fill="#2ed573" />
+                    <rect x="48" y="16" width="8" height="8" fill="#26b361" />
+                    <rect x="56" y="16" width="8" height="8" fill="#2ed573" />
+                    <rect x="48" y="24" width="8" height="8" fill="#26b361" />
+                    
+                    {/* Right leaf cluster */}
+                    <rect x="72" y="0" width="8" height="8" fill="#2ed573" />
+                    <rect x="80" y="8" width="8" height="8" fill="#2ed573" />
+                    <rect x="72" y="8" width="8" height="8" fill="#26b361" />
+                    <rect x="88" y="16" width="8" height="8" fill="#2ed573" />
+                    <rect x="80" y="16" width="8" height="8" fill="#26b361" />
+                    <rect x="72" y="16" width="8" height="8" fill="#1f9a51" />
+                    <rect x="80" y="24" width="8" height="8" fill="#26b361" />
+                    <rect x="72" y="24" width="8" height="8" fill="#1f9a51" />
+                  </g>
+                  
+                  {/* Carrot body (orange gradient from top to bottom) */}
+                  <g>
+                    {/* Top section - lighter orange */}
+                    <rect x="40" y="32" width="32" height="8" fill="#ff8833" />
+                    <rect x="32" y="40" width="48" height="8" fill="#ff7722" />
+                    <rect x="32" y="48" width="48" height="8" fill="#ff6a00" />
+                    
+                    {/* Middle section - main orange */}
+                    <rect x="32" y="56" width="48" height="8" fill="#ff6a00" />
+                    <rect x="32" y="64" width="48" height="8" fill="#ee5f00" />
+                    <rect x="32" y="72" width="48" height="8" fill="#ff6a00" />
+                    <rect x="32" y="80" width="48" height="8" fill="#ee5f00" />
+                    
+                    {/* Tapering middle */}
+                    <rect x="40" y="88" width="32" height="8" fill="#ff6a00" />
+                    <rect x="40" y="96" width="32" height="8" fill="#dd5500" />
+                    <rect x="40" y="104" width="32" height="8" fill="#ee5f00" />
+                    
+                    {/* Lower taper */}
+                    <rect x="48" y="112" width="16" height="8" fill="#dd5500" />
+                    <rect x="48" y="120" width="16" height="8" fill="#cc4d00" />
+                    
+                    {/* Tip */}
+                    <rect x="52" y="128" width="8" height="8" fill="#cc4d00" />
+                    <rect x="52" y="136" width="8" height="8" fill="#aa3d00" />
+                    
+                    {/* Horizontal texture lines (darker) */}
+                    <rect x="36" y="44" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                    <rect x="72" y="52" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                    <rect x="36" y="60" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                    <rect x="68" y="68" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                    <rect x="40" y="76" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                    <rect x="64" y="84" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                    <rect x="44" y="92" width="4" height="4" fill="#cc4d00" opacity="0.6" />
+                    <rect x="60" y="100" width="4" height="4" fill="#cc4d00" opacity="0.6" />
+                    <rect x="52" y="108" width="4" height="4" fill="#bb4200" opacity="0.6" />
+                  </g>
+                  
+                  {/* Pixel shine/highlights */}
+                  <g opacity="0.4">
+                    <rect x="44" y="36" width="4" height="4" fill="#ffaa55" />
+                    <rect x="36" y="52" width="4" height="4" fill="#ffaa55" />
+                    <rect x="44" y="68" width="4" height="4" fill="#ffaa55" />
+                    <rect x="52" y="92" width="4" height="4" fill="#ff8833" />
+                  </g>
+                </svg>
+              </motion.div>
 
               {/* Enhanced corner pixels */}
               {[
@@ -557,7 +637,7 @@ export function LandingPage({ onConnect }: LandingPageProps) {
               ].map((pos, i) => (
                 <motion.div
                   key={i}
-                  className="absolute w-3 h-3 bg-[#ff6a00]"
+                  className="absolute w-3 h-3 bg-[#ff6a00] pointer-events-none"
                   style={{ ...pos, boxShadow: "0 0 4px rgba(255, 106, 0, 0.6)" }}
                   animate={{
                     opacity: [1, 0.4, 1],
@@ -572,7 +652,7 @@ export function LandingPage({ onConnect }: LandingPageProps) {
 
               {/* Periodic scanline sweep */}
               <motion.div
-                className="absolute left-0 right-0 h-px"
+                className="absolute left-0 right-0 h-px pointer-events-none"
                 style={{
                   backgroundColor: "#ff6a00",
                   opacity: 0.7,
@@ -588,6 +668,18 @@ export function LandingPage({ onConnect }: LandingPageProps) {
                   times: [0, 0.12, 0.13, 1],
                 }}
               />
+              
+              {/* Growth indicator text */}
+              <motion.div
+                className="absolute -bottom-10 left-1/2 -translate-x-1/2 pixel text-xs pointer-events-none"
+                style={{ color: "#666666" }}
+                animate={{
+                  opacity: [0.5, 0.8, 0.5],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                CLICK TO SHAKE
+              </motion.div>
             </div>
           </motion.div>
 

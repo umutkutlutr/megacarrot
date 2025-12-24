@@ -12,6 +12,7 @@ export function LandingPage({ onConnect }: LandingPageProps) {
   const [glowPulse, setGlowPulse] = useState(0);
   const [carrotScale, setCarrotScale] = useState(1);
   const [shakeIntensity, setShakeIntensity] = useState(0);
+  const [isShaking, setIsShaking] = useState(false);
 
   // Scanline animation
   useEffect(() => {
@@ -40,20 +41,20 @@ export function LandingPage({ onConnect }: LandingPageProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Shake decay
+  // Shake reset
   useEffect(() => {
-    if (shakeIntensity > 0) {
+    if (isShaking) {
       const timeout = setTimeout(() => {
-        setShakeIntensity((prev) => Math.max(0, prev - 0.5));
-      }, 100);
+        setIsShaking(false);
+      }, 800);
       return () => clearTimeout(timeout);
     }
-  }, [shakeIntensity]);
+  }, [isShaking]);
 
   const glowOpacity = Math.sin((glowPulse / 100) * Math.PI * 2) * 0.25 + 0.4;
 
   const handleCarrotClick = () => {
-    setShakeIntensity(20);
+    setIsShaking(true);
   };
 
   return (
@@ -541,91 +542,104 @@ export function LandingPage({ onConnect }: LandingPageProps) {
                 }}
                 animate={{
                   scale: carrotScale,
-                  rotate: shakeIntensity > 0 ? [0, -shakeIntensity, shakeIntensity, -shakeIntensity * 0.5, shakeIntensity * 0.5, 0] : 0,
+                  rotate: isShaking ? 0 : 0,
                 }}
                 transition={{
                   scale: { duration: 0.05 },
-                  rotate: { duration: 0.6, ease: "easeOut" },
                 }}
               >
-                <svg width="120" height="160" viewBox="0 0 120 160" style={{ filter: "drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.3))" }}>
-                  {/* Carrot leaves (green) */}
-                  <g>
-                    {/* Left leaf cluster */}
-                    <rect x="24" y="0" width="8" height="8" fill="#2ed573" />
-                    <rect x="16" y="8" width="8" height="8" fill="#2ed573" />
-                    <rect x="24" y="8" width="8" height="8" fill="#26b361" />
-                    <rect x="8" y="16" width="8" height="8" fill="#2ed573" />
-                    <rect x="16" y="16" width="8" height="8" fill="#26b361" />
-                    <rect x="24" y="16" width="8" height="8" fill="#1f9a51" />
-                    <rect x="16" y="24" width="8" height="8" fill="#26b361" />
-                    <rect x="24" y="24" width="8" height="8" fill="#1f9a51" />
+                <motion.div
+                  animate={
+                    isShaking
+                      ? {
+                          rotate: [0, -8, 8, -6, 6, -4, 4, -2, 2, 0],
+                        }
+                      : { rotate: 0 }
+                  }
+                  transition={{
+                    duration: 1.2,
+                    ease: [0.34, 1.56, 0.64, 1],
+                  }}
+                >
+                  <svg width="120" height="160" viewBox="0 0 120 160" style={{ filter: "drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.3))" }}>
+                    {/* Carrot leaves (green) */}
+                    <g>
+                      {/* Left leaf cluster */}
+                      <rect x="24" y="0" width="8" height="8" fill="#2ed573" />
+                      <rect x="16" y="8" width="8" height="8" fill="#2ed573" />
+                      <rect x="24" y="8" width="8" height="8" fill="#26b361" />
+                      <rect x="8" y="16" width="8" height="8" fill="#2ed573" />
+                      <rect x="16" y="16" width="8" height="8" fill="#26b361" />
+                      <rect x="24" y="16" width="8" height="8" fill="#1f9a51" />
+                      <rect x="16" y="24" width="8" height="8" fill="#26b361" />
+                      <rect x="24" y="24" width="8" height="8" fill="#1f9a51" />
+                      
+                      {/* Center leaf */}
+                      <rect x="48" y="0" width="8" height="8" fill="#2ed573" />
+                      <rect x="48" y="8" width="8" height="8" fill="#26b361" />
+                      <rect x="40" y="16" width="8" height="8" fill="#2ed573" />
+                      <rect x="48" y="16" width="8" height="8" fill="#26b361" />
+                      <rect x="56" y="16" width="8" height="8" fill="#2ed573" />
+                      <rect x="48" y="24" width="8" height="8" fill="#26b361" />
+                      
+                      {/* Right leaf cluster */}
+                      <rect x="72" y="0" width="8" height="8" fill="#2ed573" />
+                      <rect x="80" y="8" width="8" height="8" fill="#2ed573" />
+                      <rect x="72" y="8" width="8" height="8" fill="#26b361" />
+                      <rect x="88" y="16" width="8" height="8" fill="#2ed573" />
+                      <rect x="80" y="16" width="8" height="8" fill="#26b361" />
+                      <rect x="72" y="16" width="8" height="8" fill="#1f9a51" />
+                      <rect x="80" y="24" width="8" height="8" fill="#26b361" />
+                      <rect x="72" y="24" width="8" height="8" fill="#1f9a51" />
+                    </g>
                     
-                    {/* Center leaf */}
-                    <rect x="48" y="0" width="8" height="8" fill="#2ed573" />
-                    <rect x="48" y="8" width="8" height="8" fill="#26b361" />
-                    <rect x="40" y="16" width="8" height="8" fill="#2ed573" />
-                    <rect x="48" y="16" width="8" height="8" fill="#26b361" />
-                    <rect x="56" y="16" width="8" height="8" fill="#2ed573" />
-                    <rect x="48" y="24" width="8" height="8" fill="#26b361" />
+                    {/* Carrot body (orange gradient from top to bottom) */}
+                    <g>
+                      {/* Top section - lighter orange */}
+                      <rect x="40" y="32" width="32" height="8" fill="#ff8833" />
+                      <rect x="32" y="40" width="48" height="8" fill="#ff7722" />
+                      <rect x="32" y="48" width="48" height="8" fill="#ff6a00" />
+                      
+                      {/* Middle section - main orange */}
+                      <rect x="32" y="56" width="48" height="8" fill="#ff6a00" />
+                      <rect x="32" y="64" width="48" height="8" fill="#ee5f00" />
+                      <rect x="32" y="72" width="48" height="8" fill="#ff6a00" />
+                      <rect x="32" y="80" width="48" height="8" fill="#ee5f00" />
+                      
+                      {/* Tapering middle */}
+                      <rect x="40" y="88" width="32" height="8" fill="#ff6a00" />
+                      <rect x="40" y="96" width="32" height="8" fill="#dd5500" />
+                      <rect x="40" y="104" width="32" height="8" fill="#ee5f00" />
+                      
+                      {/* Lower taper */}
+                      <rect x="48" y="112" width="16" height="8" fill="#dd5500" />
+                      <rect x="48" y="120" width="16" height="8" fill="#cc4d00" />
+                      
+                      {/* Tip */}
+                      <rect x="52" y="128" width="8" height="8" fill="#cc4d00" />
+                      <rect x="52" y="136" width="8" height="8" fill="#aa3d00" />
+                      
+                      {/* Horizontal texture lines (darker) */}
+                      <rect x="36" y="44" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                      <rect x="72" y="52" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                      <rect x="36" y="60" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                      <rect x="68" y="68" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                      <rect x="40" y="76" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                      <rect x="64" y="84" width="4" height="4" fill="#dd5500" opacity="0.6" />
+                      <rect x="44" y="92" width="4" height="4" fill="#cc4d00" opacity="0.6" />
+                      <rect x="60" y="100" width="4" height="4" fill="#cc4d00" opacity="0.6" />
+                      <rect x="52" y="108" width="4" height="4" fill="#bb4200" opacity="0.6" />
+                    </g>
                     
-                    {/* Right leaf cluster */}
-                    <rect x="72" y="0" width="8" height="8" fill="#2ed573" />
-                    <rect x="80" y="8" width="8" height="8" fill="#2ed573" />
-                    <rect x="72" y="8" width="8" height="8" fill="#26b361" />
-                    <rect x="88" y="16" width="8" height="8" fill="#2ed573" />
-                    <rect x="80" y="16" width="8" height="8" fill="#26b361" />
-                    <rect x="72" y="16" width="8" height="8" fill="#1f9a51" />
-                    <rect x="80" y="24" width="8" height="8" fill="#26b361" />
-                    <rect x="72" y="24" width="8" height="8" fill="#1f9a51" />
-                  </g>
-                  
-                  {/* Carrot body (orange gradient from top to bottom) */}
-                  <g>
-                    {/* Top section - lighter orange */}
-                    <rect x="40" y="32" width="32" height="8" fill="#ff8833" />
-                    <rect x="32" y="40" width="48" height="8" fill="#ff7722" />
-                    <rect x="32" y="48" width="48" height="8" fill="#ff6a00" />
-                    
-                    {/* Middle section - main orange */}
-                    <rect x="32" y="56" width="48" height="8" fill="#ff6a00" />
-                    <rect x="32" y="64" width="48" height="8" fill="#ee5f00" />
-                    <rect x="32" y="72" width="48" height="8" fill="#ff6a00" />
-                    <rect x="32" y="80" width="48" height="8" fill="#ee5f00" />
-                    
-                    {/* Tapering middle */}
-                    <rect x="40" y="88" width="32" height="8" fill="#ff6a00" />
-                    <rect x="40" y="96" width="32" height="8" fill="#dd5500" />
-                    <rect x="40" y="104" width="32" height="8" fill="#ee5f00" />
-                    
-                    {/* Lower taper */}
-                    <rect x="48" y="112" width="16" height="8" fill="#dd5500" />
-                    <rect x="48" y="120" width="16" height="8" fill="#cc4d00" />
-                    
-                    {/* Tip */}
-                    <rect x="52" y="128" width="8" height="8" fill="#cc4d00" />
-                    <rect x="52" y="136" width="8" height="8" fill="#aa3d00" />
-                    
-                    {/* Horizontal texture lines (darker) */}
-                    <rect x="36" y="44" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                    <rect x="72" y="52" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                    <rect x="36" y="60" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                    <rect x="68" y="68" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                    <rect x="40" y="76" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                    <rect x="64" y="84" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                    <rect x="44" y="92" width="4" height="4" fill="#cc4d00" opacity="0.6" />
-                    <rect x="60" y="100" width="4" height="4" fill="#cc4d00" opacity="0.6" />
-                    <rect x="52" y="108" width="4" height="4" fill="#bb4200" opacity="0.6" />
-                  </g>
-                  
-                  {/* Pixel shine/highlights */}
-                  <g opacity="0.4">
-                    <rect x="44" y="36" width="4" height="4" fill="#ffaa55" />
-                    <rect x="36" y="52" width="4" height="4" fill="#ffaa55" />
-                    <rect x="44" y="68" width="4" height="4" fill="#ffaa55" />
-                    <rect x="52" y="92" width="4" height="4" fill="#ff8833" />
-                  </g>
-                </svg>
+                    {/* Pixel shine/highlights */}
+                    <g opacity="0.4">
+                      <rect x="44" y="36" width="4" height="4" fill="#ffaa55" />
+                      <rect x="36" y="52" width="4" height="4" fill="#ffaa55" />
+                      <rect x="44" y="68" width="4" height="4" fill="#ffaa55" />
+                      <rect x="52" y="92" width="4" height="4" fill="#ff8833" />
+                    </g>
+                  </svg>
+                </motion.div>
               </motion.div>
 
               {/* Enhanced corner pixels */}

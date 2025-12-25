@@ -14,6 +14,15 @@ export function LandingPage({ onConnect }: LandingPageProps) {
   const [shakeIntensity, setShakeIntensity] = useState(0);
   const [isShaking, setIsShaking] = useState(false);
 
+  // Stat count-up animations
+  const [farmerPower, setFarmerPower] = useState(0);
+  const [burned, setBurned] = useState(0);
+  const [farmerPowerSettled, setFarmerPowerSettled] = useState(false);
+  const [burnedSettled, setBurnedSettled] = useState(false);
+
+  const FINAL_FARMER_POWER = 12847;
+  const FINAL_BURNED = 247391;
+
   // Scanline animation
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,6 +59,65 @@ export function LandingPage({ onConnect }: LandingPageProps) {
       return () => clearTimeout(timeout);
     }
   }, [isShaking]);
+
+  // Count-up animation for TOTAL FARMER POWER
+  useEffect(() => {
+    const startValue = Math.floor(FINAL_FARMER_POWER * 0.25); // Start at 25%
+    const duration = 2000; // 2 seconds
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Ease-out exponential
+      const easeProgress = 1 - Math.pow(1 - progress, 4);
+      
+      const currentValue = Math.floor(startValue + (FINAL_FARMER_POWER - startValue) * easeProgress);
+      setFarmerPower(currentValue);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setFarmerPower(FINAL_FARMER_POWER);
+        setFarmerPowerSettled(true);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, []);
+
+  // Count-up animation for BURNED (starts 200ms later)
+  useEffect(() => {
+    const startDelay = 200;
+    const timeout = setTimeout(() => {
+      const startValue = Math.floor(FINAL_BURNED * 0.25); // Start at 25%
+      const duration = 2000; // 2 seconds
+      const startTime = Date.now();
+
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Ease-out exponential
+        const easeProgress = 1 - Math.pow(1 - progress, 4);
+        
+        const currentValue = Math.floor(startValue + (FINAL_BURNED - startValue) * easeProgress);
+        setBurned(currentValue);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          setBurned(FINAL_BURNED);
+          setBurnedSettled(true);
+        }
+      };
+
+      requestAnimationFrame(animate);
+    }, startDelay);
+
+    return () => clearTimeout(timeout);
+  }, []);
 
   const glowOpacity = Math.sin((glowPulse / 100) * Math.PI * 2) * 0.25 + 0.4;
 
@@ -385,98 +453,166 @@ export function LandingPage({ onConnect }: LandingPageProps) {
           >
             {/* Total Farmer Power */}
             <div
-              className="w-80 border-3 border-[#2a2a2a] p-6 relative overflow-hidden"
+              className="w-80 border-3 border-[#2a2a2a] relative overflow-hidden"
               style={{ 
                 backgroundColor: "#0f0f0f",
                 boxShadow: "5px 5px 0 rgba(0, 0, 0, 0.4)",
+                padding: "24px",
+                minWidth: "320px",
               }}
             >
               {/* Inner highlight border */}
               <div className="absolute top-0 left-0 right-0 h-px" style={{ backgroundColor: "#ff6a00", opacity: 0.15 }} />
               
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-6 h-6 border-2 border-[#ff6a00] flex items-center justify-center" style={{ backgroundColor: "#ff6a00" }}>
-                  <Zap size={14} style={{ color: "#0a0a0a" }} strokeWidth={3} />
+              {/* Internal grid structure */}
+              <div className="flex flex-col">
+                {/* Label row */}
+                <div className="flex items-center gap-3" style={{ marginBottom: "20px" }}>
+                  <div className="w-6 h-6 border-2 border-[#ff6a00] flex items-center justify-center" style={{ backgroundColor: "#ff6a00" }}>
+                    <Zap size={14} style={{ color: "#0a0a0a" }} strokeWidth={3} />
+                  </div>
+                  <span className="mono text-xs" style={{ color: "#555555", letterSpacing: "0.08em", opacity: 0.7 }}>
+                    TOTAL FARMER POWER
+                  </span>
                 </div>
-                <span className="mono text-xs" style={{ color: "#555555", letterSpacing: "0.08em", opacity: 0.7 }}>
-                  TOTAL FARMER POWER
-                </span>
+                
+                {/* Number row - optically centered */}
+                <div className="flex items-baseline" style={{ minHeight: "50px" }}>
+                  <motion.div
+                    className="pixel"
+                    style={{ 
+                      color: "#ff6a00", 
+                      fontSize: "32px", 
+                      letterSpacing: "-0.04em",
+                      lineHeight: 1,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ 
+                      opacity: 1, 
+                      scale: farmerPowerSettled ? [1, 1.05, 1] : 1,
+                      textShadow: farmerPowerSettled
+                        ? [
+                            "0 0 12px rgba(255, 106, 0, 0.4)",
+                            "0 0 24px rgba(255, 106, 0, 0.8)",
+                            "0 0 12px rgba(255, 106, 0, 0.4)",
+                          ]
+                        : "0 0 12px rgba(255, 106, 0, 0.4)",
+                    }}
+                    transition={
+                      farmerPowerSettled
+                        ? { duration: 0.4, times: [0, 0.5, 1] }
+                        : { duration: 2.5, repeat: Infinity }
+                    }
+                  >
+                    {farmerPower.toLocaleString()}
+                  </motion.div>
+                </div>
               </div>
-              <motion.div
-                className="pixel"
-                style={{ color: "#ff6a00", fontSize: "42px", letterSpacing: "-0.02em" }}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ 
-                  opacity: 1, 
-                  scale: 1,
-                  textShadow: [
-                    "0 0 12px rgba(255, 106, 0, 0.4)",
-                    "0 0 18px rgba(255, 106, 0, 0.6)",
-                    "0 0 12px rgba(255, 106, 0, 0.4)",
-                  ],
-                }}
-                transition={{ duration: 2.5, repeat: Infinity }}
-              >
-                12,847
-              </motion.div>
             </div>
 
             {/* Supply */}
             <div
-              className="w-80 border-3 border-[#2a2a2a] p-6 relative overflow-hidden"
+              className="w-80 border-3 border-[#2a2a2a] relative overflow-hidden"
               style={{ 
                 backgroundColor: "#0f0f0f",
                 boxShadow: "5px 5px 0 rgba(0, 0, 0, 0.4)",
+                padding: "24px",
+                minWidth: "320px",
               }}
             >
               <div className="absolute top-0 left-0 right-0 h-px" style={{ backgroundColor: "#2ed573", opacity: 0.15 }} />
               
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-6 h-6 border-2 border-[#2ed573] flex items-center justify-center" style={{ backgroundColor: "#2ed573" }}>
-                  <Box size={14} style={{ color: "#0a0a0a" }} strokeWidth={3} />
+              {/* Internal grid structure */}
+              <div className="flex flex-col">
+                {/* Label row */}
+                <div className="flex items-center gap-3" style={{ marginBottom: "20px" }}>
+                  <div className="w-6 h-6 border-2 border-[#2ed573] flex items-center justify-center" style={{ backgroundColor: "#2ed573" }}>
+                    <Box size={14} style={{ color: "#0a0a0a" }} strokeWidth={3} />
+                  </div>
+                  <span className="mono text-xs" style={{ color: "#555555", letterSpacing: "0.08em", opacity: 0.7 }}>
+                    SUPPLY
+                  </span>
                 </div>
-                <span className="mono text-xs" style={{ color: "#555555", letterSpacing: "0.08em", opacity: 0.7 }}>
-                  SUPPLY
-                </span>
+                
+                {/* Number row - optically centered */}
+                <div className="flex items-baseline" style={{ minHeight: "50px" }}>
+                  <motion.div
+                    className="pixel"
+                    style={{ 
+                      color: "#2ed573", 
+                      fontSize: "32px", 
+                      letterSpacing: "-0.04em",
+                      lineHeight: 1,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: 0.15 }}
+                  >
+                    1,000,000
+                  </motion.div>
+                </div>
               </div>
-              <motion.div
-                className="pixel"
-                style={{ color: "#2ed573", fontSize: "36px", letterSpacing: "-0.02em" }}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.15 }}
-              >
-                1,000,000
-              </motion.div>
             </div>
 
             {/* Burned */}
             <div
-              className="w-80 border-3 border-[#2a2a2a] p-6 relative overflow-hidden"
+              className="w-80 border-3 border-[#2a2a2a] relative overflow-hidden"
               style={{ 
                 backgroundColor: "#0f0f0f",
                 boxShadow: "5px 5px 0 rgba(0, 0, 0, 0.4)",
+                padding: "24px",
+                minWidth: "320px",
               }}
             >
               <div className="absolute top-0 left-0 right-0 h-px" style={{ backgroundColor: "#00a8cc", opacity: 0.15 }} />
               
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-6 h-6 border-2 border-[#00a8cc] flex items-center justify-center" style={{ backgroundColor: "#00a8cc" }}>
-                  <Flame size={14} style={{ color: "#0a0a0a" }} strokeWidth={3} />
+              {/* Internal grid structure */}
+              <div className="flex flex-col">
+                {/* Label row */}
+                <div className="flex items-center gap-3" style={{ marginBottom: "20px" }}>
+                  <div className="w-6 h-6 border-2 border-[#00a8cc] flex items-center justify-center" style={{ backgroundColor: "#00a8cc" }}>
+                    <Flame size={14} style={{ color: "#0a0a0a" }} strokeWidth={3} />
+                  </div>
+                  <span className="mono text-xs" style={{ color: "#555555", letterSpacing: "0.08em", opacity: 0.7 }}>
+                    BURNED
+                  </span>
                 </div>
-                <span className="mono text-xs" style={{ color: "#555555", letterSpacing: "0.08em", opacity: 0.7 }}>
-                  BURNED
-                </span>
+                
+                {/* Number row - optically centered */}
+                <div className="flex items-baseline" style={{ minHeight: "50px" }}>
+                  <motion.div
+                    className="pixel"
+                    style={{ 
+                      color: "#00a8cc", 
+                      fontSize: "32px", 
+                      letterSpacing: "-0.04em",
+                      lineHeight: 1,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ 
+                      opacity: 1, 
+                      scale: burnedSettled ? [1, 1.05, 1] : 1,
+                      textShadow: burnedSettled
+                        ? [
+                            "0 0 12px rgba(0, 168, 204, 0.4)",
+                            "0 0 24px rgba(0, 168, 204, 0.8)",
+                            "0 0 12px rgba(0, 168, 204, 0.4)",
+                          ]
+                        : "0 0 12px rgba(0, 168, 204, 0.4)",
+                    }}
+                    transition={
+                      burnedSettled
+                        ? { duration: 0.4, times: [0, 0.5, 1] }
+                        : { duration: 0.3, delay: 0.2 }
+                    }
+                  >
+                    {burned.toLocaleString()}
+                  </motion.div>
+                </div>
               </div>
-              <motion.div
-                className="pixel"
-                style={{ color: "#00a8cc", fontSize: "42px", letterSpacing: "-0.02em" }}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-              >
-                247,391
-              </motion.div>
             </div>
           </motion.div>
 
@@ -484,10 +620,65 @@ export function LandingPage({ onConnect }: LandingPageProps) {
           <motion.div
             className="relative mb-16 cursor-pointer"
             initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              y: [0, -6, 0],
+            }}
+            transition={{ 
+              opacity: { duration: 0.4, delay: 0.25, ease: [0.22, 1, 0.36, 1] },
+              scale: { duration: 0.4, delay: 0.25, ease: [0.22, 1, 0.36, 1] },
+              y: { 
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              },
+            }}
             onClick={handleCarrotClick}
+            style={{
+              willChange: "transform",
+            }}
           >
+            {/* Pixel particle drift - 8 particles */}
+            {[...Array(8)].map((_, i) => {
+              const colors = ["#ff6a00", "#2ed573", "#00a8cc"];
+              const color = colors[i % 3];
+              const positions = [
+                { top: "20%", left: "-40px" },
+                { top: "40%", right: "-50px" },
+                { bottom: "30%", left: "-45px" },
+                { bottom: "50%", right: "-40px" },
+                { top: "60%", left: "-35px" },
+                { top: "25%", right: "-55px" },
+                { bottom: "45%", left: "-50px" },
+                { bottom: "25%", right: "-45px" },
+              ];
+              
+              return (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 pointer-events-none"
+                  style={{
+                    backgroundColor: color,
+                    boxShadow: `0 0 4px ${color}`,
+                    ...positions[i],
+                  }}
+                  animate={{
+                    x: [0, (i % 2 === 0 ? -1 : 1) * (30 + i * 5), 0],
+                    y: [0, -40 + i * 3, 0],
+                    opacity: [0, 0.6, 0],
+                    scale: [1, 1.5, 1],
+                  }}
+                  transition={{
+                    duration: 8 + i,
+                    repeat: Infinity,
+                    delay: i * 1.2,
+                    ease: "easeInOut",
+                  }}
+                />
+              );
+            })}
+
             {/* Stepped glow halo (no blur, layered opacity) */}
             {[40, 32, 24, 16, 8].map((offset, i) => (
               <motion.div
@@ -509,6 +700,40 @@ export function LandingPage({ onConnect }: LandingPageProps) {
                 boxShadow: "6px 6px 0 rgba(255, 106, 0, 0.4), inset 0 0 40px rgba(255, 106, 0, 0.08)",
               }}
             >
+              {/* CRT Scanline */}
+              <div className="retro-scanline" style={{ opacity: 0.3 }} />
+              
+              {/* CRT Flicker Overlay */}
+              <div className="retro-crt-flicker" />
+              
+              {/* Enhanced corner pixels with pulse */}
+              {[
+                { top: -2, left: -2 },
+                { top: -2, right: -2 },
+                { bottom: -2, left: -2 },
+                { bottom: -2, right: -2 },
+              ].map((pos, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-4 h-4 bg-[#ff6a00] pointer-events-none"
+                  style={pos}
+                  animate={{
+                    opacity: [0.4, 1, 0.4],
+                    boxShadow: [
+                      "0 0 0 rgba(255, 106, 0, 0)",
+                      "0 0 8px rgba(255, 106, 0, 0.6)",
+                      "0 0 0 rgba(255, 106, 0, 0)",
+                    ],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    delay: i * 0.5,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+
               {/* Pixel dirt/soil at bottom */}
               <div className="absolute bottom-0 left-0 right-0 h-20 flex flex-col justify-end overflow-hidden">
                 {[0, 1, 2].map((row) => (
@@ -642,47 +867,6 @@ export function LandingPage({ onConnect }: LandingPageProps) {
                 </motion.div>
               </motion.div>
 
-              {/* Enhanced corner pixels */}
-              {[
-                { top: 6, left: 6 },
-                { top: 6, right: 6 },
-                { bottom: 6, left: 6 },
-                { bottom: 6, right: 6 },
-              ].map((pos, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-3 h-3 bg-[#ff6a00] pointer-events-none"
-                  style={{ ...pos, boxShadow: "0 0 4px rgba(255, 106, 0, 0.6)" }}
-                  animate={{
-                    opacity: [1, 0.4, 1],
-                  }}
-                  transition={{
-                    duration: 1.8,
-                    repeat: Infinity,
-                    delay: i * 0.45,
-                  }}
-                />
-              ))}
-
-              {/* Periodic scanline sweep */}
-              <motion.div
-                className="absolute left-0 right-0 h-px pointer-events-none"
-                style={{
-                  backgroundColor: "#ff6a00",
-                  opacity: 0.7,
-                  boxShadow: "0 0 4px rgba(255, 106, 0, 0.8)",
-                }}
-                animate={{
-                  top: ["0%", "100%", "100%", "100%"],
-                  opacity: [0, 0.7, 0, 0],
-                }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  times: [0, 0.12, 0.13, 1],
-                }}
-              />
-              
               {/* Growth indicator text */}
               <motion.div
                 className="absolute -bottom-10 left-1/2 -translate-x-1/2 pixel text-xs pointer-events-none"

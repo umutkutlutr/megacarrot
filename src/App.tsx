@@ -2,20 +2,15 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { LandingPage } from "./components/LandingPage";
 import { ProtocolInitializationModal } from "./components/ProtocolInitializationModal";
-import { DashboardNav } from "./components/DashboardNav";
-import { SystemStatus } from "./components/SystemStatus";
-import { SingleFarmCard } from "./components/SingleFarmCard";
-import { FarmerSlotSection } from "./components/FarmerSlotSection";
-import { PixelUpgradeSection } from "./components/PixelUpgradeSection";
-import { PixelVault } from "./components/PixelVault";
+import { PremiumDashboard } from "./components/PremiumDashboard";
 
 export default function App() {
   const [gameState, setGameState] = useState<"landing" | "payment" | "dashboard">("landing");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   
   // Game data
-  const [farmTier, setFarmTier] = useState(1);
-  const [farmLevel, setFarmLevel] = useState(0);
+  const [farmTier, setFarmTier] = useState(5);
+  const [farmLevel, setFarmLevel] = useState(12);
   const [farmers, setFarmers] = useState([
     {
       id: 1,
@@ -25,6 +20,36 @@ export default function App() {
       unlocked: true,
       color: "#33ff66",
       specialty: "Entry-level farmer",
+      slotSize: 1,
+    },
+    {
+      id: 2,
+      name: "OPERATIVE-2",
+      level: 1,
+      boost: 35,
+      unlocked: true,
+      color: "#ff6600",
+      specialty: "Production Specialist",
+      slotSize: 1,
+    },
+    {
+      id: 3,
+      name: "OPERATIVE-3",
+      level: 1,
+      boost: 45,
+      unlocked: true,
+      color: "#00ccff",
+      specialty: "Efficiency Expert",
+      slotSize: 1,
+    },
+    {
+      id: 4,
+      name: "OPERATIVE-4",
+      level: 1,
+      boost: 55,
+      unlocked: true,
+      color: "#ff00ff",
+      specialty: "Speed Optimizer",
       slotSize: 1,
     },
   ]);
@@ -130,145 +155,18 @@ export default function App() {
       {gameState === "dashboard" && (
         <motion.div
           key="dashboard"
-          className="min-h-screen relative"
-          initial={{ opacity: 0, scale: 1.05 }}
+          initial={{ opacity: 0, scale: 1.02 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Pixel dithering background pattern */}
-          <div
-            className="fixed inset-0 pointer-events-none opacity-[0.03]"
-            style={{
-              backgroundImage: `
-                repeating-linear-gradient(
-                  0deg,
-                  transparent,
-                  transparent 1px,
-                  rgba(255, 255, 255, 0.1) 1px,
-                  rgba(255, 255, 255, 0.1) 2px
-                ),
-                repeating-linear-gradient(
-                  90deg,
-                  transparent,
-                  transparent 1px,
-                  rgba(255, 255, 255, 0.1) 1px,
-                  rgba(255, 255, 255, 0.1) 2px
-                )
-              `,
-            }}
+          <PremiumDashboard
+            onDisconnect={handleDisconnect}
+            farmTier={farmTier}
+            farmLevel={farmLevel}
+            farmers={farmers}
+            maxFarmerSlots={maxFarmerSlots}
           />
-
-          {/* Navigation */}
-          <DashboardNav onDisconnect={handleDisconnect} />
-
-          {/* Main content - All sections in one page */}
-          <main className="relative pt-28">
-            {/* System Status / Overview */}
-            <SystemStatus />
-
-            {/* Single Farm Section */}
-            <section className="py-16 border-t-4 border-[#333333]" id="farm">
-              <div className="grid-container">
-                <motion.div
-                  className="mb-8"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="flex items-center gap-4 mb-4">
-                    <motion.div
-                      className="w-4 h-4 bg-[#ff6600] pixel-shadow-sm"
-                      animate={{
-                        opacity: [1, 0.5, 1],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                      }}
-                    />
-                    <h2 className="pixel" style={{ color: "#ff6600" }}>
-                      YOUR FARM
-                    </h2>
-                    <div className="flex-1 h-px bg-[#333333]" />
-                  </div>
-                  <div className="mono text-xs" style={{ color: "#666666" }}>
-                    // AGRICULTURAL PRODUCTION FACILITY
-                  </div>
-                </motion.div>
-
-                <SingleFarmCard
-                  tier={farmTier}
-                  production={farmProduction}
-                  level={farmLevel}
-                  upgradeCost={upgradeCost}
-                  farmerSlots={maxFarmerSlots}
-                  assignedFarmers={assignedFarmers}
-                  onUpgrade={handleFarmUpgrade}
-                />
-              </div>
-            </section>
-
-            {/* Farmer Management Section */}
-            <FarmerSlotSection
-              maxSlots={maxFarmerSlots}
-              farmers={farmers}
-              onHireFarmer={handleHireFarmer}
-              onAssignFarmer={handleAssignFarmer}
-              onUpgradeFarmer={handleUpgradeFarmer}
-            />
-
-            {/* Upgrades Section */}
-            <PixelUpgradeSection />
-
-            {/* Vault Section */}
-            <PixelVault />
-          </main>
-
-          {/* Bottom terminal bar */}
-          <div
-            className="fixed bottom-0 left-0 right-0 h-10 border-t-4 border-[#333333] flex items-center px-4 z-40"
-            style={{ backgroundColor: "#0a0a0a" }}
-          >
-            <div className="grid-container">
-              <div className="flex items-center justify-between w-full">
-                <div
-                  className="flex items-center gap-6 mono"
-                  style={{ color: "#666666", fontSize: "12px" }}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>SYSTEM.STATUS:</span>
-                    <motion.span
-                      style={{ color: "#33ff66" }}
-                      animate={{ opacity: [1, 0.6, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      ONLINE
-                    </motion.span>
-                  </div>
-                  <div className="w-px h-4 bg-[#333333]" />
-                  <span>FARM.TIER: {farmTier}</span>
-                  <div className="w-px h-4 bg-[#333333]" />
-                  <span>FARMERS: {assignedFarmers}/{maxFarmerSlots}</span>
-                  <div className="w-px h-4 bg-[#333333]" />
-                  <span>WALLET: 0x7F3a...d91c</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <motion.div
-                    className="w-2 h-2 bg-[#33ff66]"
-                    animate={{ opacity: [1, 0, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  />
-                  <span
-                    className="mono"
-                    style={{ color: "#33ff66", fontSize: "12px" }}
-                  >
-                    ACTIVE
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
         </motion.div>
       )}
     </AnimatePresence>

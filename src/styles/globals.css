@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import "./retroEffects.css";
 
 :root {
   --bg-black: #0a0a0a;

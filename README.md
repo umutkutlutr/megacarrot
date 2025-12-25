@@ -1,7 +1,7 @@
 
-  # BlinkRush One-Page Website
+  # MegaCarrot
 
-  This is a code bundle for BlinkRush One-Page Website. The original project is available at https://www.figma.com/design/cLDngs3x2aZOS6j9Lt1WlK/BlinkRush-One-Page-Website.
+  This is a code bundle for MegaCarrot. The original project is available at https://www.figma.com/design/cLDngs3x2aZOS6j9Lt1WlK/MegaCarrot.
 
   ## Running the code
 

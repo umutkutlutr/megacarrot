@@ -665,76 +665,147 @@ export function PremiumDashboard({
               <div
                 className="relative border-2"
                 style={{
-                  width: `${100 + farmTier * 16}px`,
-                  height: `${100 + farmTier * 16}px`,
-                  borderColor: "#3a2a1a",
+                  width: `${140 + farmTier * 20}px`,
+                  height: `${140 + farmTier * 20}px`,
+                  borderColor: "#4a3a2a",
                   backgroundColor: "#2a1a0a",
-                  boxShadow: "inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 16px rgba(255, 106, 0, 0.15)",
+                  boxShadow: "inset 0 0 30px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 106, 0, 0.2)",
                 }}
               >
-                {/* Soil texture */}
+                {/* Enhanced soil texture with depth */}
                 <div
-                  className="absolute inset-0 opacity-10"
+                  className="absolute inset-0 opacity-20"
                   style={{
-                    backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(58, 42, 26, 0.5) 2px, rgba(58, 42, 26, 0.5) 3px)`,
+                    backgroundImage: `
+                      repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(74, 58, 42, 0.6) 3px, rgba(74, 58, 42, 0.6) 4px),
+                      repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(58, 42, 26, 0.4) 3px, rgba(58, 42, 26, 0.4) 4px)
+                    `,
                   }}
                 />
 
-                {/* Carrots - tight fit */}
-                <div className="absolute inset-0 flex items-center justify-center p-2">
+                {/* Soil particles effect */}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `radial-gradient(circle at 20% 30%, rgba(139, 90, 43, 0.3) 1px, transparent 1px),
+                                      radial-gradient(circle at 60% 70%, rgba(139, 90, 43, 0.2) 1px, transparent 1px),
+                                      radial-gradient(circle at 80% 20%, rgba(139, 90, 43, 0.25) 1px, transparent 1px)`,
+                    backgroundSize: "20px 20px, 30px 30px, 25px 25px",
+                  }}
+                />
+
+                {/* Dense Carrot Grid - More carrots! */}
+                <div className="absolute inset-0 flex items-center justify-center p-3">
                   <div 
-                    className="grid"
+                    className="grid w-full h-full"
                     style={{
-                      gridTemplateColumns: `repeat(${Math.min(farmTier + 1, 6)}, 1fr)`,
-                      gap: `${Math.max(6 - farmTier * 0.4, 2)}px`,
+                      gridTemplateColumns: `repeat(${Math.min(farmTier + 3, 8)}, 1fr)`,
+                      gridTemplateRows: `repeat(${Math.min(farmTier + 3, 8)}, 1fr)`,
+                      gap: `${Math.max(4, 8 - farmTier * 0.3)}px`,
                     }}
                   >
-                    {[...Array(farmTier * (farmTier + 1))].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className="flex flex-col items-center"
-                        initial={{ y: 3, opacity: 0 }}
-                        animate={{
-                          y: [3, 0, 3],
-                          opacity: [0.6, 1, 0.6],
-                        }}
-                        transition={{
-                          duration: 3 + Math.random() * 2,
-                          repeat: Infinity,
-                          delay: i * 0.1,
-                        }}
-                      >
-                        {/* Carrot top */}
-                        <div
-                          style={{
-                            width: `${Math.max(3 - farmTier * 0.15, 2)}px`,
-                            height: `${Math.max(4 - farmTier * 0.15, 2.5)}px`,
-                            backgroundColor: "#33ff66",
-                            boxShadow: "0 0 3px rgba(51, 255, 102, 0.5)",
+                    {[...Array((farmTier + 3) * (farmTier + 3))].map((_, i) => {
+                      const row = Math.floor(i / (farmTier + 3));
+                      const col = i % (farmTier + 3);
+                      
+                      return (
+                        <motion.div
+                          key={i}
+                          className="flex flex-col items-center justify-end"
+                          initial={{ y: 5, opacity: 0 }}
+                          animate={{
+                            y: [5, 0, 5],
+                            opacity: [0.7, 1, 0.7],
+                            scale: [0.95, 1, 0.95],
                           }}
-                        />
-                        {/* Carrot body */}
-                        <div
-                          style={{
-                            width: `${Math.max(2.5 - farmTier * 0.1, 1.5)}px`,
-                            height: `${Math.max(6 - farmTier * 0.15, 3.5)}px`,
-                            backgroundColor: "#ff6a00",
-                            boxShadow: "0 0 4px rgba(255, 106, 0, 0.6)",
+                          transition={{
+                            duration: 2.5 + Math.random() * 1.5,
+                            repeat: Infinity,
+                            delay: i * 0.05,
+                            ease: "easeInOut",
                           }}
-                        />
-                      </motion.div>
-                    ))}
+                        >
+                          {/* Carrot leaves/top - more detailed */}
+                          <div className="relative flex gap-[1px]">
+                            <div
+                              style={{
+                                width: `${Math.max(3 - farmTier * 0.1, 1.5)}px`,
+                                height: `${Math.max(5 - farmTier * 0.12, 3)}px`,
+                                backgroundColor: "#2d5016",
+                                clipPath: "polygon(50% 0%, 100% 100%, 0% 100%)",
+                              }}
+                            />
+                            <div
+                              style={{
+                                width: `${Math.max(3.5 - farmTier * 0.1, 2)}px`,
+                                height: `${Math.max(6 - farmTier * 0.12, 3.5)}px`,
+                                backgroundColor: "#33ff66",
+                                boxShadow: "0 0 4px rgba(51, 255, 102, 0.6)",
+                                clipPath: "polygon(50% 0%, 100% 100%, 0% 100%)",
+                              }}
+                            />
+                            <div
+                              style={{
+                                width: `${Math.max(3 - farmTier * 0.1, 1.5)}px`,
+                                height: `${Math.max(5 - farmTier * 0.12, 3)}px`,
+                                backgroundColor: "#2d5016",
+                                clipPath: "polygon(50% 0%, 100% 100%, 0% 100%)",
+                              }}
+                            />
+                          </div>
+                          
+                          {/* Carrot body - more realistic shape */}
+                          <div className="relative">
+                            <div
+                              style={{
+                                width: `${Math.max(4 - farmTier * 0.12, 2.5)}px`,
+                                height: `${Math.max(8 - farmTier * 0.15, 5)}px`,
+                                backgroundColor: "#ff6a00",
+                                clipPath: "polygon(20% 0%, 80% 0%, 100% 70%, 50% 100%, 0% 70%)",
+                                boxShadow: "0 0 5px rgba(255, 106, 0, 0.7), inset -1px 0 2px rgba(0, 0, 0, 0.3)",
+                              }}
+                            />
+                            {/* Carrot highlight */}
+                            <div
+                              className="absolute top-0 left-0"
+                              style={{
+                                width: "40%",
+                                height: "60%",
+                                background: "linear-gradient(135deg, rgba(255, 140, 0, 0.4) 0%, transparent 100%)",
+                              }}
+                            />
+                          </div>
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Advanced Production Visualization - Circular Radar */}
                 {!prefersReducedMotion && (
                   <>
-                    {/* Rotating radar sweep */}
+                    {/* Rotating radar sweep - enhanced */}
                     <motion.div
                       className="absolute inset-0"
                       style={{
-                        background: "conic-gradient(from 0deg, transparent 0%, rgba(255, 106, 0, 0.3) 10%, transparent 20%)",
+                        background: "conic-gradient(from 0deg, transparent 0%, rgba(255, 106, 0, 0.4) 5%, rgba(255, 140, 0, 0.3) 10%, transparent 15%)",
+                        mixBlendMode: "screen",
+                      }}
+                      animate={{
+                        rotate: 360,
+                      }}
+                      transition={{
+                        duration: 6,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    />
+
+                    {/* Secondary sweep */}
+                    <motion.div
+                      className="absolute inset-0"
+                      style={{
+                        background: "conic-gradient(from 180deg, transparent 0%, rgba(51, 255, 102, 0.3) 5%, transparent 10%)",
                         mixBlendMode: "screen",
                       }}
                       animate={{
@@ -747,15 +818,15 @@ export function PremiumDashboard({
                       }}
                     />
 
-                    {/* Concentric pulse rings */}
-                    {[...Array(3)].map((_, i) => (
+                    {/* Concentric pulse rings - enhanced */}
+                    {[...Array(4)].map((_, i) => (
                       <motion.div
                         key={`ring-${i}`}
                         className="absolute border rounded-full"
                         style={{
                           top: "50%",
                           left: "50%",
-                          borderColor: "rgba(51, 255, 102, 0.3)",
+                          borderColor: i % 2 === 0 ? "rgba(51, 255, 102, 0.4)" : "rgba(255, 106, 0, 0.3)",
                           borderWidth: "1px",
                         }}
                         initial={{
@@ -763,15 +834,15 @@ export function PremiumDashboard({
                           height: "0%",
                           x: "-50%",
                           y: "-50%",
-                          opacity: 0.8,
+                          opacity: 0.9,
                         }}
                         animate={{
-                          width: "100%",
-                          height: "100%",
+                          width: "120%",
+                          height: "120%",
                           opacity: 0,
                         }}
                         transition={{
-                          duration: 3,
+                          duration: 4,
                           repeat: Infinity,
                           delay: i * 1,
                           ease: "easeOut",
@@ -779,42 +850,91 @@ export function PremiumDashboard({
                       />
                     ))}
 
-                    {/* Energy particles rising */}
+                    {/* Energy particles rising - more particles */}
                     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      {[...Array(4)].map((_, i) => (
+                      {[...Array(8)].map((_, i) => (
                         <motion.div
-                          key={i}
-                          className="absolute"
+                          key={`particle-${i}`}
+                          className="absolute rounded-full"
                           style={{
-                            left: `${20 + Math.random() * 60}%`,
-                            width: "2px",
-                            height: "2px",
-                            backgroundColor: "#ff6a00",
-                            boxShadow: "0 0 6px rgba(255, 106, 0, 0.8)",
-                            borderRadius: "50%",
+                            left: `${15 + Math.random() * 70}%`,
+                            width: `${2 + Math.random() * 2}px`,
+                            height: `${2 + Math.random() * 2}px`,
+                            backgroundColor: i % 2 === 0 ? "#ff6a00" : "#33ff66",
+                            boxShadow: i % 2 === 0 
+                              ? "0 0 8px rgba(255, 106, 0, 0.9)" 
+                              : "0 0 8px rgba(51, 255, 102, 0.9)",
                           }}
-                          initial={{ bottom: "10%", opacity: 0 }}
+                          initial={{ bottom: "5%", opacity: 0, scale: 0.5 }}
                           animate={{
-                            bottom: "90%",
+                            bottom: "95%",
                             opacity: [0, 1, 1, 0],
+                            scale: [0.5, 1, 1, 0.3],
+                            x: [0, Math.random() * 20 - 10, 0],
                           }}
                           transition={{
                             duration: 3 + Math.random() * 2,
                             repeat: Infinity,
-                            delay: i * 0.7,
+                            delay: i * 0.4,
                             ease: "easeOut",
                           }}
                         />
                       ))}
                     </div>
 
-                    {/* Data grid overlay */}
+                    {/* Glowing energy field */}
+                    <motion.div
+                      className="absolute inset-0 rounded-sm"
+                      style={{
+                        background: "radial-gradient(circle at 50% 50%, rgba(255, 106, 0, 0.15) 0%, transparent 70%)",
+                      }}
+                      animate={{
+                        opacity: [0.3, 0.6, 0.3],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+
+                    {/* Corner scan lines */}
+                    {[...Array(4)].map((_, i) => {
+                      const positions = [
+                        { top: 0, left: 0, width: "30%", height: "1px" },
+                        { top: 0, right: 0, width: "30%", height: "1px" },
+                        { bottom: 0, left: 0, width: "30%", height: "1px" },
+                        { bottom: 0, right: 0, width: "30%", height: "1px" },
+                      ];
+                      
+                      return (
+                        <motion.div
+                          key={`scan-${i}`}
+                          className="absolute"
+                          style={{
+                            ...positions[i],
+                            backgroundColor: "#00ccff",
+                            boxShadow: "0 0 8px rgba(0, 204, 255, 0.6)",
+                          }}
+                          animate={{
+                            opacity: [0.2, 0.8, 0.2],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            delay: i * 0.5,
+                          }}
+                        />
+                      );
+                    })}
+
+                    {/* Data grid overlay - refined */}
                     <div
-                      className="absolute inset-0 opacity-5"
+                      className="absolute inset-0 opacity-8"
                       style={{
                         backgroundImage: `
-                          linear-gradient(0deg, transparent 24%, rgba(51, 255, 102, 0.5) 25%, rgba(51, 255, 102, 0.5) 26%, transparent 27%, transparent 74%, rgba(51, 255, 102, 0.5) 75%, rgba(51, 255, 102, 0.5) 76%, transparent 77%, transparent),
-                          linear-gradient(90deg, transparent 24%, rgba(51, 255, 102, 0.5) 25%, rgba(51, 255, 102, 0.5) 26%, transparent 27%, transparent 74%, rgba(51, 255, 102, 0.5) 75%, rgba(51, 255, 102, 0.5) 76%, transparent 77%, transparent)
+                          linear-gradient(0deg, transparent 24%, rgba(51, 255, 102, 0.6) 25%, rgba(51, 255, 102, 0.6) 26%, transparent 27%, transparent 74%, rgba(51, 255, 102, 0.6) 75%, rgba(51, 255, 102, 0.6) 76%, transparent 77%, transparent),
+                          linear-gradient(90deg, transparent 24%, rgba(51, 255, 102, 0.6) 25%, rgba(51, 255, 102, 0.6) 26%, transparent 27%, transparent 74%, rgba(51, 255, 102, 0.6) 75%, rgba(51, 255, 102, 0.6) 76%, transparent 77%, transparent)
                         `,
                         backgroundSize: "50% 50%",
                       }}

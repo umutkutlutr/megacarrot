@@ -352,29 +352,6 @@ export function LandingPage({ onConnect }: LandingPageProps) {
           >
             MEGACARROT
           </motion.h1>
-          <motion.h2
-            className="pixel mb-8 relative"
-            style={{
-              fontSize: "48px",
-              color: "#ff6a00",
-              letterSpacing: "0.15em",
-              lineHeight: 1.1,
-            }}
-            animate={prefersReducedMotion ? {} : {
-              textShadow: [
-                "0 0 40px rgba(255, 106, 0, 0.5)",
-                "0 0 60px rgba(255, 106, 0, 0.8)",
-                "0 0 40px rgba(255, 106, 0, 0.5)",
-              ],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            PROTOCOL
-          </motion.h2>
         </motion.div>
 
         {/* Animated Divider */}
@@ -515,6 +492,7 @@ export function LandingPage({ onConnect }: LandingPageProps) {
 
         {/* CTA Button */}
         <motion.div
+          className="max-w-3xl mx-auto flex justify-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 1.4 }}
@@ -542,7 +520,7 @@ export function LandingPage({ onConnect }: LandingPageProps) {
                   letterSpacing: "0.15em",
                 }}
               >
-                REQUEST PROTOCOL ACCESS
+                JOIN WAITLIST
               </span>
               <motion.div
                 animate={{
@@ -705,7 +683,6 @@ export function LandingPage({ onConnect }: LandingPageProps) {
           }}
         >
           <Send size={18} />
-          TG
         </motion.a>
       </motion.div>
 

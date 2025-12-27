@@ -541,7 +541,7 @@ export function WaitlistScreen({ onBack, onEnterGame }: WaitlistScreenProps) {
                 letterSpacing: "0.15em",
               }}
             >
-              REQUEST ACCESS
+              JOIN PROTOCOL
             </span>
 
             {/* Hover glow sweep */}
@@ -637,18 +637,12 @@ export function WaitlistScreen({ onBack, onEnterGame }: WaitlistScreenProps) {
       {/* Back button */}
       {onBack && (
         <motion.button
-          className="absolute top-8 left-8 px-6 py-3 border"
+          className="absolute top-8 left-8 px-6 py-3"
           style={{
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            borderColor: "rgba(255, 106, 0, 0.5)",
-            backdropFilter: "blur(10px)",
             color: "#666",
           }}
           onClick={onBack}
           whileHover={{
-            backgroundColor: "rgba(255, 106, 0, 0.1)",
-            borderColor: "#ff6a00",
-            boxShadow: "0 0 30px rgba(255, 106, 0, 0.3)",
             color: "#ff6a00",
           }}
           whileTap={{ scale: 0.95 }}

@@ -1,975 +1,728 @@
 import { motion } from "motion/react";
 import { useState, useEffect } from "react";
-import { Sprout, Zap, Box, Flame, Lock } from "lucide-react";
-import { PixelButton } from "./PixelButton";
+import { ChevronRight, FileText, Send } from "lucide-react";
 
 interface LandingPageProps {
   onConnect: () => void;
 }
 
 export function LandingPage({ onConnect }: LandingPageProps) {
-  const [scanlineY, setScanlineY] = useState(0);
-  const [glowPulse, setGlowPulse] = useState(0);
-  const [carrotScale, setCarrotScale] = useState(1);
-  const [shakeIntensity, setShakeIntensity] = useState(0);
-  const [isShaking, setIsShaking] = useState(false);
+  const [mouseX, setMouseX] = useState(0);
+  const [mouseY, setMouseY] = useState(0);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  
+  // Animated counters
+  const [totalFarmPower, setTotalFarmPower] = useState(0);
+  const [remainingSupply, setRemainingSupply] = useState(0);
+  const [burnedAmount, setBurnedAmount] = useState(0);
 
-  // Stat count-up animations
-  const [farmerPower, setFarmerPower] = useState(0);
-  const [burned, setBurned] = useState(0);
-  const [farmerPowerSettled, setFarmerPowerSettled] = useState(false);
-  const [burnedSettled, setBurnedSettled] = useState(false);
-
-  const FINAL_FARMER_POWER = 12847;
-  const FINAL_BURNED = 247391;
-
-  // Scanline animation
+  // Check for reduced motion preference
   useEffect(() => {
-    const interval = setInterval(() => {
-      setScanlineY((prev) => (prev >= 100 ? 0 : prev + 0.5));
-    }, 30);
-    return () => clearInterval(interval);
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches);
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  // Glow pulse
+  // Track mouse for parallax
   useEffect(() => {
-    const interval = setInterval(() => {
-      setGlowPulse((prev) => (prev + 1) % 100);
-    }, 30);
-    return () => clearInterval(interval);
-  }, []);
+    if (prefersReducedMotion) return;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      setMouseX((e.clientX / window.innerWidth - 0.5) * 20);
+      setMouseY((e.clientY / window.innerHeight - 0.5) * 20);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [prefersReducedMotion]);
 
-  // Carrot growth animation
+  // Animated counters - slow to fast progression
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCarrotScale((prev) => {
-        const newScale = prev + 0.002;
-        return newScale > 1.3 ? 1 : newScale;
-      });
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
+    const targetFarmPower = 247851;
+    const targetRemainingSupply = 51233243;
+    const targetBurnedAmount = 20766757;
 
-  // Shake reset
-  useEffect(() => {
-    if (isShaking) {
-      const timeout = setTimeout(() => {
-        setIsShaking(false);
-      }, 800);
-      return () => clearTimeout(timeout);
-    }
-  }, [isShaking]);
+    let startTime: number | null = null;
 
-  // Count-up animation for TOTAL FARMER POWER
-  useEffect(() => {
-    const startValue = Math.floor(FINAL_FARMER_POWER * 0.25); // Start at 25%
-    const duration = 2000; // 2 seconds
-    const startTime = Date.now();
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
 
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      // Ease-out exponential
-      const easeProgress = 1 - Math.pow(1 - progress, 4);
-      
-      const currentValue = Math.floor(startValue + (FINAL_FARMER_POWER - startValue) * easeProgress);
-      setFarmerPower(currentValue);
+      // Ease-in progression (slow to fast)
+      const duration = 3000; // 3 seconds
+      const easeInProgress = Math.min(progress / duration, 1);
+      const eased = easeInProgress * easeInProgress; // quadratic ease-in
 
-      if (progress < 1) {
+      setTotalFarmPower(Math.floor(targetFarmPower * eased));
+      setRemainingSupply(Math.floor(targetRemainingSupply * eased));
+      setBurnedAmount(Math.floor(targetBurnedAmount * eased));
+
+      if (progress < duration) {
         requestAnimationFrame(animate);
       } else {
-        setFarmerPower(FINAL_FARMER_POWER);
-        setFarmerPowerSettled(true);
+        setTotalFarmPower(targetFarmPower);
+        setRemainingSupply(targetRemainingSupply);
+        setBurnedAmount(targetBurnedAmount);
       }
     };
 
     requestAnimationFrame(animate);
   }, []);
 
-  // Count-up animation for BURNED (starts 200ms later)
-  useEffect(() => {
-    const startDelay = 200;
-    const timeout = setTimeout(() => {
-      const startValue = Math.floor(FINAL_BURNED * 0.25); // Start at 25%
-      const duration = 2000; // 2 seconds
-      const startTime = Date.now();
+  // Star particles
+  const StarField = () => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {Array.from({ length: 100 }).map((_, i) => {
+        const size = Math.random() * 2 + 1;
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+        const duration = Math.random() * 3 + 2;
+        const delay = Math.random() * 2;
 
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Ease-out exponential
-        const easeProgress = 1 - Math.pow(1 - progress, 4);
-        
-        const currentValue = Math.floor(startValue + (FINAL_BURNED - startValue) * easeProgress);
-        setBurned(currentValue);
+        return (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: `${size}px`,
+              height: `${size}px`,
+              left: `${x}%`,
+              top: `${y}%`,
+              backgroundColor: i % 3 === 0 ? "#ff6a00" : i % 3 === 1 ? "#33ff99" : "#00ccff",
+            }}
+            animate={{
+              opacity: [0.2, 0.8, 0.2],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration,
+              repeat: Infinity,
+              delay,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
 
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          setBurned(FINAL_BURNED);
-          setBurnedSettled(true);
-        }
-      };
+  // Animated grid background with parallax
+  const GridBackground = () => (
+    <motion.div
+      className="absolute inset-0 overflow-hidden pointer-events-none opacity-15"
+      style={{
+        x: mouseX,
+        y: mouseY,
+      }}
+      transition={{ type: "spring", stiffness: 50, damping: 20 }}
+    >
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(51, 255, 153, 0.3) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(51, 255, 153, 0.3) 1px, transparent 1px)
+          `,
+          backgroundSize: "80px 80px",
+          transform: "perspective(500px) rotateX(60deg)",
+          transformOrigin: "center center",
+        }}
+        animate={{
+          backgroundPosition: ["0px 0px", "80px 80px"],
+        }}
+        transition={{
+          duration: 40,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+      />
+    </motion.div>
+  );
 
-      requestAnimationFrame(animate);
-    }, startDelay);
+  // Floating particles
+  const FloatingParticles = () => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {Array.from({ length: 30 }).map((_, i) => {
+        const size = Math.random() * 4 + 2;
+        const startX = Math.random() * 100;
+        const startY = Math.random() * 100;
+        const duration = prefersReducedMotion ? 0 : Math.random() * 20 + 15;
+        const delay = Math.random() * 5;
 
-    return () => clearTimeout(timeout);
-  }, []);
+        return (
+          <motion.div
+            key={i}
+            className="absolute"
+            style={{
+              width: `${size}px`,
+              height: `${size}px`,
+              left: `${startX}%`,
+              top: `${startY}%`,
+              backgroundColor: i % 3 === 0 ? "#ff6a00" : i % 3 === 1 ? "#33ff99" : "#00ccff",
+              opacity: 0.3,
+            }}
+            animate={prefersReducedMotion ? {} : {
+              y: [0, -150, 0],
+              x: [0, (Math.random() - 0.5) * 40, 0],
+              opacity: [0, 0.5, 0],
+            }}
+            transition={{
+              duration,
+              repeat: Infinity,
+              delay,
+              ease: "linear",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
 
-  const glowOpacity = Math.sin((glowPulse / 100) * Math.PI * 2) * 0.25 + 0.4;
+  // Data line flickers - occasional horizontal lines that flash across screen
+  const DataLineFlickers = () => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {Array.from({ length: 5 }).map((_, i) => {
+        const yPos = Math.random() * 100;
+        const delay = i * 4 + Math.random() * 3;
 
-  const handleCarrotClick = () => {
-    setIsShaking(true);
-  };
+        return (
+          <motion.div
+            key={i}
+            className="absolute left-0 right-0"
+            style={{
+              height: "1px",
+              top: `${yPos}%`,
+              background: "linear-gradient(to right, transparent, rgba(51, 255, 153, 0.8), transparent)",
+              boxShadow: "0 0 10px rgba(51, 255, 153, 0.6)",
+            }}
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={prefersReducedMotion ? {} : {
+              opacity: [0, 1, 0],
+              scaleX: [0, 1, 1],
+            }}
+            transition={{
+              duration: 0.4,
+              repeat: Infinity,
+              repeatDelay: 8,
+              delay,
+              times: [0, 0.2, 1],
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+
+  // Noise texture overlay
+  const NoiseTexture = () => (
+    <div
+      className="absolute inset-0 pointer-events-none opacity-[0.03]"
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        backgroundRepeat: "repeat",
+      }}
+    />
+  );
 
   return (
     <div
-      className="fixed inset-0 overflow-hidden"
+      className="min-h-screen relative overflow-hidden flex items-center justify-center"
       style={{
-        backgroundColor: "#0a0a0a",
+        backgroundColor: "#000000",
+        backgroundImage: "radial-gradient(circle at 50% 50%, rgba(10, 10, 10, 1) 0%, rgba(0, 0, 0, 1) 100%)",
       }}
     >
-      {/* Multi-layer background */}
-      
-      {/* Subtle vignette */}
+      {/* Background layers */}
+      <StarField />
+      <GridBackground />
+      <FloatingParticles />
+      <DataLineFlickers />
+      <NoiseTexture />
+
+      {/* Scanlines */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.6) 100%)",
+          backgroundImage: "linear-gradient(to bottom, transparent 50%, rgba(0, 200, 255, 0.015) 50%)",
+          backgroundSize: "100% 4px",
         }}
       />
 
-      {/* Primary pixel grid */}
+      {/* Vignette */}
       <div
-        className="absolute inset-0 opacity-[0.05]"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: `
-            repeating-linear-gradient(0deg, transparent, transparent 7px, rgba(0, 188, 235, 0.5) 7px, rgba(0, 188, 235, 0.5) 8px),
-            repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(0, 188, 235, 0.5) 7px, rgba(0, 188, 235, 0.5) 8px)
-          `,
+          background: "radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.8) 100%)",
         }}
       />
 
-      {/* Diagonal pixel noise pattern */}
-      <div
-        className="absolute inset-0 opacity-[0.02]"
-        style={{
-          backgroundImage: `
-            repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255, 102, 0, 0.3) 3px, rgba(255, 102, 0, 0.3) 4px),
-            repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(51, 255, 102, 0.3) 3px, rgba(51, 255, 102, 0.3) 4px)
-          `,
-        }}
-      />
+      {/* Main Content */}
+      <div className="relative z-10 max-w-5xl mx-auto px-8 text-center">
+        {/* Status Indicator */}
+        <motion.div
+          className="flex items-center justify-center gap-3 mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          <motion.div
+            className="w-2 h-2"
+            style={{ backgroundColor: "#33ff99" }}
+            animate={{
+              opacity: [1, 0.3, 1],
+              boxShadow: [
+                "0 0 8px rgba(51, 255, 153, 0.8)",
+                "0 0 20px rgba(51, 255, 153, 1)",
+                "0 0 8px rgba(51, 255, 153, 0.8)",
+              ],
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+          <span
+            className="mono"
+            style={{
+              fontSize: "10px",
+              color: "#33ff99",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+            }}
+          >
+            System Online
+          </span>
+        </motion.div>
 
-      {/* Enhanced glowing pixel dots */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(60)].map((_, i) => {
-          const isOrange = i % 4 === 0;
-          const isGreen = i % 4 === 1;
-          const isCyan = i % 4 === 2;
-          const color = isOrange ? "#ff6a00" : isGreen ? "#2ed573" : isCyan ? "#00a8cc" : "#ff6a00";
-          const size = i % 3 === 0 ? 2 : 1;
-          
-          return (
+        {/* Hero Headline */}
+        <motion.div
+          className="relative"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.4 }}
+        >
+          {/* Scan sweep over hero text - passes every 6s */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none overflow-hidden"
+            style={{
+              maskImage: "linear-gradient(to bottom, transparent, black, transparent)",
+            }}
+          >
             <motion.div
-              key={i}
-              className="absolute"
+              className="absolute left-0 right-0 h-[3px]"
               style={{
-                width: `${size}px`,
-                height: `${size}px`,
-                backgroundColor: color,
-                left: `${(i * 37) % 100}%`,
-                top: `${(i * 53) % 100}%`,
-                boxShadow: size === 2 ? `0 0 4px ${color}` : "none",
+                background: "linear-gradient(to bottom, transparent, rgba(255, 106, 0, 0.9), transparent)",
+                boxShadow: "0 0 30px rgba(255, 106, 0, 1)",
+                filter: "blur(2px)",
               }}
-              animate={{
-                opacity: [0.2, 0.6, 0.2],
-                scale: [1, 1.5, 1],
+              initial={{ top: "-10px" }}
+              animate={prefersReducedMotion ? {} : {
+                top: ["0%", "100%"],
               }}
               transition={{
-                duration: 4 + (i % 6),
+                duration: 2,
                 repeat: Infinity,
-                delay: (i % 12) * 0.3,
+                repeatDelay: 6,
+                ease: "linear",
               }}
             />
-          );
-        })}
-      </div>
+          </motion.div>
 
-      {/* Scanline effect */}
-      <div
-        className="absolute left-0 right-0 h-px pointer-events-none"
-        style={{
-          top: `${scanlineY}%`,
-          backgroundColor: "#00a8cc",
-          opacity: 0.08,
-          boxShadow: "0 0 8px rgba(0, 168, 204, 0.4)",
-        }}
-      />
-
-      {/* Top bar */}
-      <div
-        className="fixed top-0 left-0 right-0 h-20 border-b-2 border-[#1a1a1a] z-50"
-        style={{ backgroundColor: "rgba(10, 10, 10, 0.98)" }}
-      >
-        <div className="max-w-[1440px] mx-auto px-8 h-full flex items-center justify-between">
-          {/* Left: Logo + Text */}
-          <div className="flex items-center gap-4">
-            <motion.div
-              className="w-10 h-10 border-3 border-[#ff6a00] flex items-center justify-center relative"
-              style={{ backgroundColor: "#ff6a00", boxShadow: "4px 4px 0 rgba(255, 106, 0, 0.3)" }}
-              whileHover={{
-                boxShadow: "6px 6px 0 rgba(255, 106, 0, 0.5)",
-                y: -2,
-              }}
-            >
-              <Sprout size={22} style={{ color: "#0a0a0a" }} strokeWidth={3} />
-            </motion.div>
-            <span className="pixel" style={{ color: "#ff6a00", fontSize: "18px", letterSpacing: "0.05em" }}>
-              MEGACARROT
-            </span>
-          </div>
-
-          {/* Center: Nav (disabled) */}
-          <div className="flex items-center gap-12">
-            {["ABOUT", "TOKEN", "FARMS"].map((item) => (
-              <button
-                key={item}
-                className="mono text-sm relative group cursor-not-allowed"
-                style={{ color: "#2a2a2a", letterSpacing: "0.08em", fontWeight: 500 }}
-                disabled
-              >
-                {item}
-                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                  <div
-                    className="border-2 border-[#333333] px-4 py-2 whitespace-nowrap mono text-xs"
-                    style={{ backgroundColor: "#0a0a0a", color: "#666666", boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.5)" }}
-                  >
-                    CONNECT WALLET TO ACCESS
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Right: ABOUT + DOCS + X - PIXEL FONT */}
-          <div className="flex items-center gap-8 pr-8">
-            <motion.a
-              href="#"
-              className="pixel relative group"
-              style={{ color: "#666666", letterSpacing: "0.08em", fontSize: "16px" }}
-              whileHover={{
-                color: "#2ed573",
-                y: -2,
-              }}
-              transition={{ duration: 0.16 }}
-            >
-              ABOUT
-              <motion.div
-                className="absolute -bottom-1 left-0 h-0.5 bg-[#2ed573]"
-                initial={{ width: 0 }}
-                whileHover={{ width: "100%" }}
-                transition={{ duration: 0.2 }}
-              />
-            </motion.a>
-
-            <motion.a
-              href="#"
-              className="pixel relative group"
-              style={{ color: "#666666", letterSpacing: "0.08em", fontSize: "16px" }}
-              whileHover={{
-                color: "#ff6a00",
-                y: -2,
-              }}
-              transition={{ duration: 0.16 }}
-            >
-              DOCS
-              <motion.div
-                className="absolute -bottom-1 left-0 h-0.5 bg-[#ff6a00]"
-                initial={{ width: 0 }}
-                whileHover={{ width: "100%" }}
-                transition={{ duration: 0.2 }}
-              />
-            </motion.a>
-            
-            <motion.a
-              href="#"
-              className="pixel relative group"
-              style={{ color: "#666666", letterSpacing: "0.08em", fontSize: "16px" }}
-              whileHover={{
-                color: "#00a8cc",
-                y: -2,
-              }}
-              transition={{ duration: 0.16 }}
-            >
-              X
-              <motion.div
-                className="absolute -bottom-1 left-0 h-0.5 bg-[#00a8cc]"
-                initial={{ width: 0 }}
-                whileHover={{ width: "100%" }}
-                transition={{ duration: 0.2 }}
-              />
-            </motion.a>
-          </div>
-        </div>
-      </div>
-
-      {/* Main content - centered */}
-      <div className="fixed inset-0 flex items-center justify-center pt-20">
-        <div className="w-full max-w-[1200px] px-8 flex flex-col items-center">
-          {/* Hero headline - ANIMATED WITH TYPEWRITER EFFECT */}
-          <motion.div
-            className="text-center mb-10"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          <motion.h1
+            className="pixel mb-2 relative"
+            style={{
+              fontSize: "72px",
+              color: "#ff6a00",
+              letterSpacing: "0.15em",
+              lineHeight: 1.1,
+            }}
+            animate={prefersReducedMotion ? {} : {
+              textShadow: [
+                "0 0 40px rgba(255, 106, 0, 0.5)",
+                "0 0 60px rgba(255, 106, 0, 0.8)",
+                "0 0 40px rgba(255, 106, 0, 0.5)",
+              ],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
           >
+            MEGACARROT
+          </motion.h1>
+          <motion.h2
+            className="pixel mb-8 relative"
+            style={{
+              fontSize: "48px",
+              color: "#ff6a00",
+              letterSpacing: "0.15em",
+              lineHeight: 1.1,
+            }}
+            animate={prefersReducedMotion ? {} : {
+              textShadow: [
+                "0 0 40px rgba(255, 106, 0, 0.5)",
+                "0 0 60px rgba(255, 106, 0, 0.8)",
+                "0 0 40px rgba(255, 106, 0, 0.5)",
+              ],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            PROTOCOL
+          </motion.h2>
+        </motion.div>
+
+        {/* Animated Divider */}
+        <motion.div
+          className="relative mb-8 mx-auto"
+          style={{ width: "400px", height: "2px" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundColor: "rgba(255, 106, 0, 0.2)",
+            }}
+          />
+          <motion.div
+            className="absolute left-0 top-0 h-full"
+            style={{
+              width: "100px",
+              background: "linear-gradient(to right, transparent, rgba(255, 106, 0, 1), transparent)",
+              boxShadow: "0 0 20px rgba(255, 106, 0, 0.8)",
+            }}
+            animate={{
+              x: ["-100px", "400px"],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+        </motion.div>
+
+        {/* Subheadline */}
+        <motion.div
+          className="mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 1 }}
+        >
+          <p
+            className="mono"
+            style={{
+              fontSize: "14px",
+              color: "#33ff99",
+              letterSpacing: "0.25em",
+              textTransform: "uppercase",
+              textShadow: "0 0 20px rgba(51, 255, 153, 0.4)",
+            }}
+          >
+            Autonomous On-Chain Agricultural Infrastructure
+          </p>
+        </motion.div>
+
+        {/* System Info Grid */}
+        <motion.div
+          className="grid grid-cols-3 gap-8 mb-16 max-w-3xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 1.2 }}
+        >
+          {/* Total Farm Power */}
+          <div className="border" style={{ borderColor: "rgba(51, 255, 153, 0.3)", padding: "32px 16px" }}>
             <div
-              className="pixel mb-6"
+              className="mono mb-3"
               style={{
-                fontSize: "42px",
-                lineHeight: 1.3,
+                fontSize: "9px",
+                color: "#666",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+              }}
+            >
+              Total Farm Power
+            </div>
+            <div
+              className="pixel"
+              style={{
+                fontSize: "24px",
+                color: "#33ff99",
+                letterSpacing: "0.05em",
+              }}
+            >
+              {totalFarmPower.toLocaleString()}
+            </div>
+          </div>
+
+          {/* Remaining Supply */}
+          <div className="border" style={{ borderColor: "rgba(0, 204, 255, 0.3)", padding: "32px 16px" }}>
+            <div
+              className="mono mb-3"
+              style={{
+                fontSize: "9px",
+                color: "#666",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+              }}
+            >
+              Remaining Supply
+            </div>
+            <div
+              className="pixel"
+              style={{
+                fontSize: "20px",
+                color: "#00ccff",
                 letterSpacing: "0.03em",
               }}
             >
-              {/* Animated text with smooth cascade */}
-              <motion.div className="flex flex-col items-center gap-1">
-                {/* First line */}
-                <motion.div
-                  className="flex items-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  style={{
-                    color: "#ff6a00",
-                    textShadow: "4px 4px 0 rgba(0, 0, 0, 0.3)",
-                  }}
-                >
-                  {["P", "L", "A", "N", "T"].map((letter, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.3,
-                        delay: 0.3 + i * 0.08,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
-                      {letter}
-                    </motion.span>
-                  ))}
-                  <motion.span
-                    className="mx-3"
-                    style={{ color: "#555555" }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 0.6, 0.6] }}
-                    transition={{ duration: 0.8, delay: 0.8 }}
-                  >
-                    .
-                  </motion.span>
-                  {["G", "R", "O", "W"].map((letter, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.3,
-                        delay: 1.0 + i * 0.08,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
-                      {letter}
-                    </motion.span>
-                  ))}
-                  <motion.span
-                    className="mx-3"
-                    style={{ color: "#555555" }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 0.6, 0.6] }}
-                    transition={{ duration: 0.8, delay: 1.4 }}
-                  >
-                    .
-                  </motion.span>
-                  {["H", "A", "R", "V", "E", "S", "T"].map((letter, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.3,
-                        delay: 1.6 + i * 0.08,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
-                      {letter}
-                    </motion.span>
-                  ))}
-                  <motion.span
-                    className="ml-2"
-                    style={{ color: "#ff6a00" }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 1, 1] }}
-                    transition={{ duration: 0.4, delay: 2.3 }}
-                  >
-                    .
-                  </motion.span>
-                </motion.div>
-                
-                {/* Subtitle with smooth fade */}
-                <motion.div
-                  className="mono text-xs mt-5"
-                  style={{ 
-                    color: "#666666", 
-                    letterSpacing: "0.28em",
-                    fontWeight: 400,
-                  }}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 2.5, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <motion.span
-                    animate={{
-                      opacity: [0.6, 0.8, 0.6],
-                    }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  >
-                    Your passive crypto farming protocol
-                  </motion.span>
-                </motion.div>
-              </motion.div>
+              {remainingSupply.toLocaleString()}
             </div>
-          </motion.div>
+          </div>
 
-          {/* Stat chips - 3 in a row */}
-          <motion.div
-            className="flex gap-6 mb-16"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {/* Total Farmer Power */}
+          {/* Burned Amount */}
+          <div className="border" style={{ borderColor: "rgba(255, 106, 0, 0.3)", padding: "32px 16px" }}>
             <div
-              className="w-80 border-3 border-[#2a2a2a] relative overflow-hidden"
-              style={{ 
-                backgroundColor: "#0f0f0f",
-                boxShadow: "5px 5px 0 rgba(0, 0, 0, 0.4)",
-                padding: "24px",
-                minWidth: "320px",
+              className="mono mb-3"
+              style={{
+                fontSize: "9px",
+                color: "#666",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
               }}
             >
-              {/* Inner highlight border */}
-              <div className="absolute top-0 left-0 right-0 h-px" style={{ backgroundColor: "#ff6a00", opacity: 0.15 }} />
-              
-              {/* Internal grid structure */}
-              <div className="flex flex-col">
-                {/* Label row */}
-                <div className="flex items-center gap-3" style={{ marginBottom: "20px" }}>
-                  <div className="w-6 h-6 border-2 border-[#ff6a00] flex items-center justify-center" style={{ backgroundColor: "#ff6a00" }}>
-                    <Zap size={14} style={{ color: "#0a0a0a" }} strokeWidth={3} />
-                  </div>
-                  <span className="mono text-xs" style={{ color: "#555555", letterSpacing: "0.08em", opacity: 0.7 }}>
-                    TOTAL FARMER POWER
-                  </span>
-                </div>
-                
-                {/* Number row - optically centered */}
-                <div className="flex items-baseline" style={{ minHeight: "50px" }}>
-                  <motion.div
-                    className="pixel"
-                    style={{ 
-                      color: "#ff6a00", 
-                      fontSize: "32px", 
-                      letterSpacing: "-0.04em",
-                      lineHeight: 1,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ 
-                      opacity: 1, 
-                      scale: farmerPowerSettled ? [1, 1.05, 1] : 1,
-                      textShadow: farmerPowerSettled
-                        ? [
-                            "0 0 12px rgba(255, 106, 0, 0.4)",
-                            "0 0 24px rgba(255, 106, 0, 0.8)",
-                            "0 0 12px rgba(255, 106, 0, 0.4)",
-                          ]
-                        : "0 0 12px rgba(255, 106, 0, 0.4)",
-                    }}
-                    transition={
-                      farmerPowerSettled
-                        ? { duration: 0.4, times: [0, 0.5, 1] }
-                        : { duration: 2.5, repeat: Infinity }
-                    }
-                  >
-                    {farmerPower.toLocaleString()}
-                  </motion.div>
-                </div>
-              </div>
+              Burned Amount
             </div>
-
-            {/* Supply */}
             <div
-              className="w-80 border-3 border-[#2a2a2a] relative overflow-hidden"
-              style={{ 
-                backgroundColor: "#0f0f0f",
-                boxShadow: "5px 5px 0 rgba(0, 0, 0, 0.4)",
-                padding: "24px",
-                minWidth: "320px",
+              className="pixel"
+              style={{
+                fontSize: "20px",
+                color: "#ff6a00",
+                letterSpacing: "0.03em",
               }}
             >
-              <div className="absolute top-0 left-0 right-0 h-px" style={{ backgroundColor: "#2ed573", opacity: 0.15 }} />
-              
-              {/* Internal grid structure */}
-              <div className="flex flex-col">
-                {/* Label row */}
-                <div className="flex items-center gap-3" style={{ marginBottom: "20px" }}>
-                  <div className="w-6 h-6 border-2 border-[#2ed573] flex items-center justify-center" style={{ backgroundColor: "#2ed573" }}>
-                    <Box size={14} style={{ color: "#0a0a0a" }} strokeWidth={3} />
-                  </div>
-                  <span className="mono text-xs" style={{ color: "#555555", letterSpacing: "0.08em", opacity: 0.7 }}>
-                    SUPPLY
-                  </span>
-                </div>
-                
-                {/* Number row - optically centered */}
-                <div className="flex items-baseline" style={{ minHeight: "50px" }}>
-                  <motion.div
-                    className="pixel"
-                    style={{ 
-                      color: "#2ed573", 
-                      fontSize: "32px", 
-                      letterSpacing: "-0.04em",
-                      lineHeight: 1,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: 0.15 }}
-                  >
-                    1,000,000
-                  </motion.div>
-                </div>
-              </div>
+              {burnedAmount.toLocaleString()}
             </div>
+          </div>
+        </motion.div>
 
-            {/* Burned */}
-            <div
-              className="w-80 border-3 border-[#2a2a2a] relative overflow-hidden"
-              style={{ 
-                backgroundColor: "#0f0f0f",
-                boxShadow: "5px 5px 0 rgba(0, 0, 0, 0.4)",
-                padding: "24px",
-                minWidth: "320px",
-              }}
-            >
-              <div className="absolute top-0 left-0 right-0 h-px" style={{ backgroundColor: "#00a8cc", opacity: 0.15 }} />
-              
-              {/* Internal grid structure */}
-              <div className="flex flex-col">
-                {/* Label row */}
-                <div className="flex items-center gap-3" style={{ marginBottom: "20px" }}>
-                  <div className="w-6 h-6 border-2 border-[#00a8cc] flex items-center justify-center" style={{ backgroundColor: "#00a8cc" }}>
-                    <Flame size={14} style={{ color: "#0a0a0a" }} strokeWidth={3} />
-                  </div>
-                  <span className="mono text-xs" style={{ color: "#555555", letterSpacing: "0.08em", opacity: 0.7 }}>
-                    BURNED
-                  </span>
-                </div>
-                
-                {/* Number row - optically centered */}
-                <div className="flex items-baseline" style={{ minHeight: "50px" }}>
-                  <motion.div
-                    className="pixel"
-                    style={{ 
-                      color: "#00a8cc", 
-                      fontSize: "32px", 
-                      letterSpacing: "-0.04em",
-                      lineHeight: 1,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ 
-                      opacity: 1, 
-                      scale: burnedSettled ? [1, 1.05, 1] : 1,
-                      textShadow: burnedSettled
-                        ? [
-                            "0 0 12px rgba(0, 168, 204, 0.4)",
-                            "0 0 24px rgba(0, 168, 204, 0.8)",
-                            "0 0 12px rgba(0, 168, 204, 0.4)",
-                          ]
-                        : "0 0 12px rgba(0, 168, 204, 0.4)",
-                    }}
-                    transition={
-                      burnedSettled
-                        ? { duration: 0.4, times: [0, 0.5, 1] }
-                        : { duration: 0.3, delay: 0.2 }
-                    }
-                  >
-                    {burned.toLocaleString()}
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Center GROWING PIXEL CARROT - CLICKABLE */}
-          <motion.div
-            className="relative mb-16 cursor-pointer"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ 
-              opacity: 1, 
-              scale: 1,
-              y: [0, -6, 0],
-            }}
-            transition={{ 
-              opacity: { duration: 0.4, delay: 0.25, ease: [0.22, 1, 0.36, 1] },
-              scale: { duration: 0.4, delay: 0.25, ease: [0.22, 1, 0.36, 1] },
-              y: { 
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-              },
-            }}
-            onClick={handleCarrotClick}
+        {/* CTA Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 1.4 }}
+        >
+          <motion.button
+            className="relative px-12 py-5 border group"
             style={{
-              willChange: "transform",
+              backgroundColor: "rgba(255, 106, 0, 0.05)",
+              borderColor: "#ff6a00",
+              backdropFilter: "blur(8px)",
             }}
+            onClick={onConnect}
+            whileHover={{
+              backgroundColor: "rgba(255, 106, 0, 0.15)",
+              boxShadow: "0 0 40px rgba(255, 106, 0, 0.4)",
+            }}
+            whileTap={{ scale: 0.95 }}
           >
-            {/* Pixel particle drift - 8 particles */}
-            {[...Array(8)].map((_, i) => {
-              const colors = ["#ff6a00", "#2ed573", "#00a8cc"];
-              const color = colors[i % 3];
-              const positions = [
-                { top: "20%", left: "-40px" },
-                { top: "40%", right: "-50px" },
-                { bottom: "30%", left: "-45px" },
-                { bottom: "50%", right: "-40px" },
-                { top: "60%", left: "-35px" },
-                { top: "25%", right: "-55px" },
-                { bottom: "45%", left: "-50px" },
-                { bottom: "25%", right: "-45px" },
-              ];
-              
-              return (
-                <motion.div
-                  key={i}
-                  className="absolute w-1 h-1 pointer-events-none"
-                  style={{
-                    backgroundColor: color,
-                    boxShadow: `0 0 4px ${color}`,
-                    ...positions[i],
-                  }}
-                  animate={{
-                    x: [0, (i % 2 === 0 ? -1 : 1) * (30 + i * 5), 0],
-                    y: [0, -40 + i * 3, 0],
-                    opacity: [0, 0.6, 0],
-                    scale: [1, 1.5, 1],
-                  }}
-                  transition={{
-                    duration: 8 + i,
-                    repeat: Infinity,
-                    delay: i * 1.2,
-                    ease: "easeInOut",
-                  }}
-                />
-              );
-            })}
-
-            {/* Stepped glow halo (no blur, layered opacity) */}
-            {[40, 32, 24, 16, 8].map((offset, i) => (
-              <motion.div
-                key={i}
-                className="absolute pointer-events-none"
+            <div className="flex items-center gap-4">
+              <span
+                className="pixel"
                 style={{
-                  inset: -offset,
-                  backgroundColor: "#ff6a00",
-                  opacity: glowOpacity * (0.03 - i * 0.005),
+                  fontSize: "16px",
+                  color: "#ff6a00",
+                  letterSpacing: "0.15em",
                 }}
-              />
-            ))}
-
-            {/* Carrot container frame */}
-            <div
-              className="relative w-64 h-64 border-3 border-[#ff6a00] flex items-center justify-center overflow-visible"
-              style={{ 
-                backgroundColor: "#0a0a0a",
-                boxShadow: "6px 6px 0 rgba(255, 106, 0, 0.4), inset 0 0 40px rgba(255, 106, 0, 0.08)",
-              }}
-            >
-              {/* CRT Scanline */}
-              <div className="retro-scanline" style={{ opacity: 0.3 }} />
-              
-              {/* CRT Flicker Overlay */}
-              <div className="retro-crt-flicker" />
-              
-              {/* Enhanced corner pixels with pulse */}
-              {[
-                { top: -2, left: -2 },
-                { top: -2, right: -2 },
-                { bottom: -2, left: -2 },
-                { bottom: -2, right: -2 },
-              ].map((pos, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-4 h-4 bg-[#ff6a00] pointer-events-none"
-                  style={pos}
-                  animate={{
-                    opacity: [0.4, 1, 0.4],
-                    boxShadow: [
-                      "0 0 0 rgba(255, 106, 0, 0)",
-                      "0 0 8px rgba(255, 106, 0, 0.6)",
-                      "0 0 0 rgba(255, 106, 0, 0)",
-                    ],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    delay: i * 0.5,
-                    ease: "easeInOut",
-                  }}
-                />
-              ))}
-
-              {/* Pixel dirt/soil at bottom */}
-              <div className="absolute bottom-0 left-0 right-0 h-20 flex flex-col justify-end overflow-hidden">
-                {[0, 1, 2].map((row) => (
-                  <div key={row} className="flex w-full">
-                    {[...Array(32)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className="w-2 h-2"
-                        style={{
-                          backgroundColor: i % 3 === 0 ? "#3d2817" : i % 3 === 1 ? "#4a3320" : "#2a1a0f",
-                        }}
-                        animate={{
-                          opacity: [0.7, 0.9, 0.7],
-                        }}
-                        transition={{
-                          duration: 3,
-                          repeat: Infinity,
-                          delay: (i + row) * 0.1,
-                        }}
-                      />
-                    ))}
-                  </div>
-                ))}
-              </div>
-
-              {/* Growing Pixel Carrot */}
+              >
+                REQUEST PROTOCOL ACCESS
+              </span>
               <motion.div
-                className="absolute flex items-end justify-center"
-                style={{
-                  bottom: "64px",
-                }}
                 animate={{
-                  scale: carrotScale,
-                  rotate: isShaking ? 0 : 0,
+                  x: [0, 5, 0],
                 }}
                 transition={{
-                  scale: { duration: 0.05 },
+                  duration: 1.5,
+                  repeat: Infinity,
                 }}
               >
-                <motion.div
-                  animate={
-                    isShaking
-                      ? {
-                          rotate: [0, -8, 8, -6, 6, -4, 4, -2, 2, 0],
-                        }
-                      : { rotate: 0 }
-                  }
-                  transition={{
-                    duration: 1.2,
-                    ease: [0.34, 1.56, 0.64, 1],
-                  }}
-                >
-                  <svg width="120" height="160" viewBox="0 0 120 160" style={{ filter: "drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.3))" }}>
-                    {/* Carrot leaves (green) */}
-                    <g>
-                      {/* Left leaf cluster */}
-                      <rect x="24" y="0" width="8" height="8" fill="#2ed573" />
-                      <rect x="16" y="8" width="8" height="8" fill="#2ed573" />
-                      <rect x="24" y="8" width="8" height="8" fill="#26b361" />
-                      <rect x="8" y="16" width="8" height="8" fill="#2ed573" />
-                      <rect x="16" y="16" width="8" height="8" fill="#26b361" />
-                      <rect x="24" y="16" width="8" height="8" fill="#1f9a51" />
-                      <rect x="16" y="24" width="8" height="8" fill="#26b361" />
-                      <rect x="24" y="24" width="8" height="8" fill="#1f9a51" />
-                      
-                      {/* Center leaf */}
-                      <rect x="48" y="0" width="8" height="8" fill="#2ed573" />
-                      <rect x="48" y="8" width="8" height="8" fill="#26b361" />
-                      <rect x="40" y="16" width="8" height="8" fill="#2ed573" />
-                      <rect x="48" y="16" width="8" height="8" fill="#26b361" />
-                      <rect x="56" y="16" width="8" height="8" fill="#2ed573" />
-                      <rect x="48" y="24" width="8" height="8" fill="#26b361" />
-                      
-                      {/* Right leaf cluster */}
-                      <rect x="72" y="0" width="8" height="8" fill="#2ed573" />
-                      <rect x="80" y="8" width="8" height="8" fill="#2ed573" />
-                      <rect x="72" y="8" width="8" height="8" fill="#26b361" />
-                      <rect x="88" y="16" width="8" height="8" fill="#2ed573" />
-                      <rect x="80" y="16" width="8" height="8" fill="#26b361" />
-                      <rect x="72" y="16" width="8" height="8" fill="#1f9a51" />
-                      <rect x="80" y="24" width="8" height="8" fill="#26b361" />
-                      <rect x="72" y="24" width="8" height="8" fill="#1f9a51" />
-                    </g>
-                    
-                    {/* Carrot body (orange gradient from top to bottom) */}
-                    <g>
-                      {/* Top section - lighter orange */}
-                      <rect x="40" y="32" width="32" height="8" fill="#ff8833" />
-                      <rect x="32" y="40" width="48" height="8" fill="#ff7722" />
-                      <rect x="32" y="48" width="48" height="8" fill="#ff6a00" />
-                      
-                      {/* Middle section - main orange */}
-                      <rect x="32" y="56" width="48" height="8" fill="#ff6a00" />
-                      <rect x="32" y="64" width="48" height="8" fill="#ee5f00" />
-                      <rect x="32" y="72" width="48" height="8" fill="#ff6a00" />
-                      <rect x="32" y="80" width="48" height="8" fill="#ee5f00" />
-                      
-                      {/* Tapering middle */}
-                      <rect x="40" y="88" width="32" height="8" fill="#ff6a00" />
-                      <rect x="40" y="96" width="32" height="8" fill="#dd5500" />
-                      <rect x="40" y="104" width="32" height="8" fill="#ee5f00" />
-                      
-                      {/* Lower taper */}
-                      <rect x="48" y="112" width="16" height="8" fill="#dd5500" />
-                      <rect x="48" y="120" width="16" height="8" fill="#cc4d00" />
-                      
-                      {/* Tip */}
-                      <rect x="52" y="128" width="8" height="8" fill="#cc4d00" />
-                      <rect x="52" y="136" width="8" height="8" fill="#aa3d00" />
-                      
-                      {/* Horizontal texture lines (darker) */}
-                      <rect x="36" y="44" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                      <rect x="72" y="52" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                      <rect x="36" y="60" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                      <rect x="68" y="68" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                      <rect x="40" y="76" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                      <rect x="64" y="84" width="4" height="4" fill="#dd5500" opacity="0.6" />
-                      <rect x="44" y="92" width="4" height="4" fill="#cc4d00" opacity="0.6" />
-                      <rect x="60" y="100" width="4" height="4" fill="#cc4d00" opacity="0.6" />
-                      <rect x="52" y="108" width="4" height="4" fill="#bb4200" opacity="0.6" />
-                    </g>
-                    
-                    {/* Pixel shine/highlights */}
-                    <g opacity="0.4">
-                      <rect x="44" y="36" width="4" height="4" fill="#ffaa55" />
-                      <rect x="36" y="52" width="4" height="4" fill="#ffaa55" />
-                      <rect x="44" y="68" width="4" height="4" fill="#ffaa55" />
-                      <rect x="52" y="92" width="4" height="4" fill="#ff8833" />
-                    </g>
-                  </svg>
-                </motion.div>
-              </motion.div>
-
-              {/* Growth indicator text */}
-              <motion.div
-                className="absolute -bottom-10 left-1/2 -translate-x-1/2 pixel text-xs pointer-events-none"
-                style={{ color: "#666666" }}
-                animate={{
-                  opacity: [0.5, 0.8, 0.5],
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                CLICK TO SHAKE
+                <ChevronRight size={20} color="#ff6a00" />
               </motion.div>
             </div>
-          </motion.div>
 
-          {/* Primary CTA - LARGER & MORE PREMIUM */}
-          <motion.div
-            className="flex flex-col items-center gap-5"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <motion.button
-              className="border-4 border-[#ff6a00] px-12 py-6 relative overflow-hidden group"
-              style={{ 
-                backgroundColor: "#0a0a0a",
-                boxShadow: "6px 6px 0 rgba(255, 106, 0, 0.4)",
+            {/* Glow effect on hover */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: "linear-gradient(90deg, transparent, rgba(255, 106, 0, 0.2), transparent)",
+                opacity: 0,
               }}
-              onClick={onConnect}
               whileHover={{
-                y: -4,
-                boxShadow: "8px 10px 0 rgba(255, 106, 0, 0.5)",
+                opacity: 1,
+                x: ["-100%", "100%"],
               }}
-              whileTap={{
-                y: 1,
-                boxShadow: "3px 3px 0 rgba(255, 106, 0, 0.5)",
+              transition={{
+                x: { duration: 0.8, ease: "linear" },
               }}
-              transition={{ duration: 0.16 }}
-            >
-              {/* Hover glow effect */}
-              <motion.div
-                className="absolute inset-0"
-                style={{ backgroundColor: "#ff6a00" }}
-                initial={{ opacity: 0 }}
-                whileHover={{ opacity: 0.08 }}
-                transition={{ duration: 0.2 }}
-              />
-              
-              {/* Top edge highlight */}
-              <div className="absolute top-0 left-0 right-0 h-px" style={{ backgroundColor: "#ff6a00", opacity: 0.3 }} />
-              
-              <div className="flex items-center gap-4 relative z-10">
-                <Sprout size={24} style={{ color: "#ff6a00" }} strokeWidth={3} />
-                <span className="pixel" style={{ 
-                  fontSize: "20px", 
-                  letterSpacing: "0.08em",
-                  color: "#ff6a00",
-                }}>
-                  CONNECT WALLET
-                </span>
-              </div>
-            </motion.button>
+            />
+          </motion.button>
+        </motion.div>
 
-            <div
-              className="mono text-xs tracking-wider"
-              style={{ color: "#555555", letterSpacing: "0.12em" }}
-            >
-              &gt;&gt; CONNECT WALLET TO INITIALIZE FARM CONTROL
-            </div>
-          </motion.div>
-        </div>
+        {/* Footer Info */}
+        <motion.div
+          className="mt-20"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 1.8 }}
+        >
+          <div
+            className="mono"
+            style={{
+              fontSize: "10px",
+              color: "#444",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+            }}
+          >
+            Decentralized Yield Infrastructure · Ethereum Mainnet · Est. 2025
+          </div>
+        </motion.div>
       </div>
 
-      {/* Bottom mini nav */}
-      <div className="fixed bottom-10 left-0 right-0 z-50">
-        <div className="flex items-center justify-center gap-6">
-          {[
-            { label: "FARMS", icon: Sprout },
-            { label: "OPERATIVES", icon: Zap },
-            { label: "UPGRADES", icon: Box },
-          ].map(({ label, icon: Icon }) => (
-            <motion.button
-              key={label}
-              className="flex items-center gap-3 px-5 py-3 border-2 border-[#1a1a1a] relative group"
-              style={{ backgroundColor: "#0a0a0a", color: "#2a2a2a", boxShadow: "3px 3px 0 rgba(0, 0, 0, 0.3)" }}
-              disabled
-              whileHover={{ borderColor: "#2a2a2a" }}
-            >
-              <Lock size={14} strokeWidth={2.5} />
-              <span className="mono text-xs" style={{ letterSpacing: "0.08em" }}>{label}</span>
-              
-              {/* Tooltip */}
-              <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                <div
-                  className="border-2 border-[#333333] px-4 py-2 whitespace-nowrap mono text-xs"
-                  style={{ backgroundColor: "#0a0a0a", color: "#666666", boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.5)" }}
-                >
-                  CONNECT WALLET TO ACCESS
-                </div>
-              </div>
-            </motion.button>
-          ))}
-        </div>
-      </div>
+      {/* Corner Ornaments */}
+      <motion.div
+        className="absolute top-8 left-8 w-16 h-16 border-l-2 border-t-2"
+        style={{ borderColor: "rgba(51, 255, 153, 0.3)" }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8 }}
+      />
+      <motion.div
+        className="absolute top-8 right-8 w-16 h-16 border-r-2 border-t-2"
+        style={{ borderColor: "rgba(255, 106, 0, 0.3)" }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8 }}
+      />
+
+      {/* Top Right Navigation Links */}
+      <motion.div
+        className="absolute top-10 right-32 flex items-center gap-8"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+      >
+        {/* About */}
+        <motion.a
+          href="#"
+          className="mono flex items-center gap-2"
+          style={{
+            fontSize: "16px",
+            color: "#666",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            textDecoration: "none",
+          }}
+          whileHover={{
+            color: "#33ff99",
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            console.log("About clicked");
+          }}
+        >
+          About
+        </motion.a>
+
+        {/* Docs */}
+        <motion.a
+          href="#"
+          className="mono flex items-center gap-2"
+          style={{
+            fontSize: "16px",
+            color: "#666",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            textDecoration: "none",
+          }}
+          whileHover={{
+            color: "#00ccff",
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            console.log("Docs clicked");
+          }}
+        >
+          Docs
+        </motion.a>
+
+        {/* X (Twitter) */}
+        <motion.a
+          href="#"
+          className="mono flex items-center gap-2"
+          style={{
+            fontSize: "16px",
+            color: "#666",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            textDecoration: "none",
+          }}
+          whileHover={{
+            color: "#ff6a00",
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            window.open("https://twitter.com", "_blank");
+          }}
+        >
+          𝕏
+        </motion.a>
+
+        {/* Telegram */}
+        <motion.a
+          href="#"
+          className="mono flex items-center gap-2"
+          style={{
+            fontSize: "16px",
+            color: "#666",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            textDecoration: "none",
+          }}
+          whileHover={{
+            color: "#33ff99",
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            window.open("https://t.me", "_blank");
+          }}
+        >
+          <Send size={18} />
+          TG
+        </motion.a>
+      </motion.div>
+
+      <motion.div
+        className="absolute bottom-8 left-8 w-16 h-16 border-l-2 border-b-2"
+        style={{ borderColor: "rgba(0, 204, 255, 0.3)" }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8 }}
+      />
+      <motion.div
+        className="absolute bottom-8 right-8 w-16 h-16 border-r-2 border-b-2"
+        style={{ borderColor: "rgba(51, 255, 153, 0.3)" }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8 }}
+      />
     </div>
   );
 }

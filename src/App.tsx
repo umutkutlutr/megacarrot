@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { LandingPage } from "./components/LandingPage";
+import { WaitlistScreen } from "./components/WaitlistScreen";
 import { ProtocolInitializationModal } from "./components/ProtocolInitializationModal";
 import { PremiumDashboard } from "./components/PremiumDashboard";
 
 export default function App() {
-  const [gameState, setGameState] = useState<"landing" | "payment" | "dashboard">("landing");
+  const [gameState, setGameState] = useState<"landing" | "waitlist" | "payment" | "dashboard">("landing");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   
   // Game data
@@ -60,7 +61,7 @@ export default function App() {
   const upgradeCost = farmTier * 5000;
 
   const handleConnect = () => {
-    setShowPaymentModal(true);
+    setGameState("waitlist");
   };
 
   const handlePaymentComplete = () => {
@@ -142,6 +143,21 @@ export default function App() {
           transition={{ duration: 0.3 }}
         >
           <LandingPage onConnect={handleConnect} />
+        </motion.div>
+      )}
+
+      {gameState === "waitlist" && (
+        <motion.div
+          key="waitlist"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.3 }}
+        >
+          <WaitlistScreen 
+            onBack={() => setGameState("landing")} 
+            onEnterGame={() => setGameState("dashboard")}
+          />
         </motion.div>
       )}
 

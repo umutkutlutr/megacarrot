@@ -1066,7 +1066,7 @@ export function PremiumDashboard({
                     backgroundColor: "rgba(51, 255, 153, 0.05)",
                   }}
                 >
-                  {occupiedSlots}/{farmTier} SLOTS
+                  {farmers.length}/{maxFarmerSlots} MAX FARMER
                 </div>
               </div>
               <div className="space-y-4">
@@ -1093,10 +1093,16 @@ export function PremiumDashboard({
                         </div>
                         <div className="flex items-center gap-3">
                           <div
-                            className="mono"
-                            style={{ fontSize: "10px", color: "#888", letterSpacing: "0.05em" }}
+                            className="mono px-2 py-1 border"
+                            style={{ 
+                              fontSize: "10px", 
+                              color: "#ff6a00", 
+                              letterSpacing: "0.05em",
+                              borderColor: "rgba(255, 106, 0, 0.3)",
+                              backgroundColor: "rgba(255, 106, 0, 0.05)",
+                            }}
                           >
-                            Occupies: {farmer.slotSize || 1} {(farmer.slotSize || 1) > 1 ? 'Slots' : 'Slot'}
+                            SPACE: {farmer.slotSize || 1} SLOT{(farmer.slotSize || 1) > 1 ? 'S' : ''}
                           </div>
                           <div style={{ width: "1px", height: "12px", backgroundColor: "#333" }} />
                           <div
@@ -1130,7 +1136,7 @@ export function PremiumDashboard({
                         </div>
                       </div>
                       <motion.button
-                        className="border px-4 py-2 flex items-center gap-2"
+                        className="border-2 px-5 py-2.5 flex items-center gap-2"
                         style={{
                           backgroundColor: "rgba(51, 255, 153, 0.1)",
                           borderColor: "#33ff99",
@@ -1138,13 +1144,14 @@ export function PremiumDashboard({
                         whileHover={{
                           backgroundColor: "rgba(51, 255, 153, 0.2)",
                           boxShadow: "0 0 16px rgba(51, 255, 153, 0.4)",
+                          scale: 1.02,
                         }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <ArrowUpCircle size={12} style={{ color: "#33ff99" }} />
+                        <ArrowUpCircle size={14} style={{ color: "#33ff99" }} />
                         <span
                           className="pixel"
-                          style={{ fontSize: "10px", color: "#33ff99", letterSpacing: "0.08em" }}
+                          style={{ fontSize: "11px", color: "#33ff99", letterSpacing: "0.08em" }}
                         >
                           UPGRADE
                         </span>
